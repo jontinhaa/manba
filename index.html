@@ -88,6 +88,9 @@
 
   /* — Layout — */
   --maxw: 96rem; --gutter: 1.5rem; --gutter-lg: 2.5rem; --nav-h: 5rem;
+
+  /* — Flashlight/spotlight (design_system.html) — atualizado via JS no mousemove */
+  --mouse-x: 50%; --mouse-y: 50%;
 }
 
 /* Tema escuro derivado: o design system é light-first, então invertemos os papéis
@@ -296,7 +299,7 @@ html.js .preloader{
 /* — Camada 0: fundo ambiente (grade + auroras + colunas) — */
 .hero__ambient{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
 /* .section-grid é a mesma grade, reutilizável em qualquer seção futura
-   (já usada abaixo em #next) — mantém o vocabulário visual consistente. */
+   (já usada abaixo em #tech) — mantém o vocabulário visual consistente. */
 .hero__grid, .section-grid{
   position:absolute; inset:0;
   background-image:
@@ -500,18 +503,51 @@ html.js .preloader{
 .btn--primary svg{ transition:transform var(--d-fast) var(--ease); }
 .btn--primary:hover svg{ transform:translateX(4px); }
 
-/* Anel de luz girando na borda — .beam-border do design system */
-.beam{ position:relative; display:inline-flex; border-radius:var(--r-pill); }
+/* Shimmer beam — igual ao pedido em animations-gemini/index.html ("Add a
+   1px shimmer beam animation around the pill-shaped button on hover"):
+   um anel fino de luz correndo pela borda + um brilho diagonal varrendo a
+   face do botão, uma vez, a cada entrada do hover.
+
+   A versão anterior (conic-gradient num ::before com inset:-1.5px, sem
+   overflow:hidden) deixava o próprio degradê "vazar" para fora do formato
+   pill em certos ângulos — aparecia como uma forma triangular laranja
+   girando ao lado do botão. Correção estrutural: .beam agora tem
+   overflow:hidden (nada consegue escapar da forma, seja qual for o ângulo)
+   e um padding de 1.5px que empurra o conteúdo do botão pra dentro,
+   abrindo o "aro" onde o degradê giratório aparece — a mesma técnica de
+   "padding cria o anel" usada no botão da referência. */
+.beam{
+  position:relative; display:inline-flex; border-radius:var(--r-pill);
+  padding:1.5px; overflow:hidden;
+}
 .beam::before{
-  content:""; position:absolute; inset:-1.5px; border-radius:inherit; z-index:0;
-  background:conic-gradient(from 0deg at 50% 50%,
-    transparent 0deg, rgba(var(--primary-rgb),.95) 55deg, transparent 130deg);
-  opacity:0; transition:opacity .35s var(--ease);
-  animation:rotate-beam 2.2s linear infinite;
-  pointer-events:none;
+  content:""; position:absolute; z-index:0; pointer-events:none;
+  top:50%; left:50%; width:260%; height:900%; /* bem maior que o pill: cobre qualquer proporção de botão em qualquer ângulo da rotação */
+  transform:translate(-50%,-50%);
+  background:conic-gradient(from 0deg, transparent 0 88%, rgba(var(--primary-rgb),1) 96%, transparent 100%);
+  opacity:0; transition:opacity .4s var(--ease);
+  animation:rotate-beam 2.4s linear infinite;
 }
 .beam:hover::before,.beam:focus-within::before{ opacity:1; }
-@keyframes rotate-beam{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
+.beam > .btn{ position:relative; z-index:1; }
+@keyframes rotate-beam{ from{ transform:translate(-50%,-50%) rotate(0); } to{ transform:translate(-50%,-50%) rotate(360deg); } }
+
+/* Brilho diagonal varrendo a face do botão — dispara uma vez a cada hover
+   (não fica em loop; o "animation" só existe enquanto :hover é verdadeiro,
+   então cada entrada do mouse reinicia o efeito do zero). */
+.beam .btn::after{
+  content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(75deg, transparent 42%, rgba(255,255,255,.4) 50%, transparent 58%);
+  transform:translateX(-160%);
+  opacity:0;
+}
+.beam:hover .btn::after{ animation:btn-shimmer 1.1s ease-in-out; }
+@keyframes btn-shimmer{
+  0%  { transform:translateX(-160%); opacity:0; }
+  12% { opacity:1; }
+  88% { opacity:1; }
+  100%{ transform:translateX(160%); opacity:0; }
+}
 
 /* Secundário: vidro real (blur 16px) + borda em gradiente mascarada */
 .btn--glass{
@@ -603,35 +639,478 @@ html.js .preloader{
 }
 
 /* ============================================================================
-   6) PRÓXIMA SEÇÃO (placeholder) — recebe o vídeo quando ele some no fim do pin
+   6) MÓDULOS — carrossel de recursos (segunda dobra)
    ========================================================================== */
-.next-section{
-  position:relative; min-height:100svh;
-  display:flex; align-items:center; justify-content:center;
+.modules{
+  position:relative; overflow:hidden;
+  padding-block:clamp(4.5rem,9vw,7.5rem);
   background:var(--bg-alt);
   border-top:1px solid var(--border);
-  overflow:hidden;
 }
-.next-section__ambient{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-.next-section__content{
-  position:relative; z-index:1; text-align:center;
-  max-width:40rem; padding-inline:var(--gutter);
-}
-.next-section__eyebrow{ display:inline-flex; align-items:center; gap:.6rem; color:var(--fg-muted); margin:0 0 1.25rem; }
-.next-section__eyebrow b{ width:7px; height:7px; border-radius:50%; background:var(--primary-500); }
-.next-section__title{
+.modules__ambient{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+
+.modules__head{ position:relative; z-index:1; max-width:38rem; margin-bottom:clamp(2.75rem,5.5vw,4.5rem); }
+.modules__kicker{ display:inline-flex; align-items:center; gap:.6rem; color:var(--fg-muted); margin:0 0 1rem; }
+.modules__kicker b{ width:7px; height:7px; border-radius:50%; background:var(--primary-500); }
+.modules__title{
   font-family:var(--font-display); font-weight:500; text-transform:uppercase;
-  font-size:clamp(2rem,5vw,3.5rem); line-height:.95; letter-spacing:-.03em;
-  margin:0 0 1.1rem;
+  font-size:clamp(2rem,4.4vw,3.25rem); line-height:1.04; letter-spacing:-.02em;
+  margin:0; max-width:17ch;
 }
-.next-section__lead{ color:var(--fg-muted); font-size:.95rem; line-height:1.7; margin:0; }
+
+.modules__stage{
+  position:relative; z-index:1;
+  display:grid; grid-template-columns:1fr; gap:2.75rem;
+}
+@media (min-width:900px){
+  .modules__stage{
+    grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);
+    align-items:center; gap:clamp(2.5rem,5vw,5rem);
+  }
+}
+/* Coluna direita (texto + navegação) — min-width:0 evita que o grid deixe
+   a coluna estourar a largura por causa do texto/botões internos. */
+.modules__panel-content{ min-width:0; display:flex; flex-direction:column; gap:clamp(2rem,4vw,2.5rem); }
+
+/* — Coluna visual — */
+.modules__visual{ position:relative; }
+.modules__ghost{
+  position:absolute; left:-.25rem; bottom:-2.25rem; z-index:0;
+  font-family:var(--font-display); font-weight:600;
+  font-size:clamp(6rem,15vw,10.5rem); line-height:1; letter-spacing:-.04em;
+  color:var(--fg); opacity:.07; pointer-events:none; user-select:none;
+  transition:opacity .3s var(--ease);
+}
+/* O card do produto é SEMPRE claro, nos dois temas — de propósito.
+   A foto (assets/raw_files/manbaimage.png) tem fundo branco opaco "assado"
+   na imagem, sem canal alpha real (conferido: alpha 100% em toda a extensão).
+   mix-blend-mode:multiply só apaga esse branco de forma limpa contra um
+   fundo CLARO (multiply×branco = idêntico); contra um fundo escuro a conta
+   inverte e é o CONTROLE — a parte escura da foto — que desapareceria, não
+   o fundo. Then em vez de tentar forçar duas fórmulas de blend diferentes
+   por tema (frágil, difícil de garantir sem testar num navegador real),
+   o card fica um "cartão de luz" fixo — um padrão comum em página dark
+   (Apple faz isso o tempo todo): a foto de produto sempre correta, o resto
+   da seção acompanha o tema normalmente. */
+.modules__panel{
+  position:relative; z-index:1; overflow:hidden;
+  aspect-ratio:4/5; max-width:26rem; margin-inline:auto;
+  border-radius:var(--r-xl); border:1px solid var(--n-200);
+  background:var(--n-50);
+  box-shadow:var(--sh-glass);
+  animation:panel-float 7s ease-in-out infinite;
+}
+@keyframes panel-float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+[data-theme="dark"] .modules__panel{
+  box-shadow:var(--sh-glow-lg), 0 30px 80px -20px rgba(0,0,0,.7);
+}
+.modules__glow{
+  position:absolute; inset:-15%; z-index:0; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(var(--primary-rgb),.28), transparent 72%);
+  filter:blur(38px); opacity:.85;
+}
+/* Flashlight — acompanha o cursor (mesma mecânica de .flashlight-card do
+   design_system.html: --mouse-x/--mouse-y atualizados via JS no mousemove,
+   um radial-gradient sutil que só aparece no hover). */
+.modules__panel::before{
+  content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+  border-radius:inherit;
+  background:radial-gradient(280px circle at var(--mouse-x) var(--mouse-y), rgba(var(--primary-rgb),.20), transparent 55%);
+  opacity:0; transition:opacity .45s var(--ease);
+}
+.modules__panel:hover::before{ opacity:1; }
+/* Borda de vidro assimétrica — luz "batendo" só num canto, como no card de
+   vidro do design_system.html (border + mask-image em diagonal). */
+.modules__panel::after{
+  content:""; position:absolute; inset:0; z-index:4; pointer-events:none;
+  border-radius:inherit; border:1px solid rgba(var(--primary-rgb),.38);
+  -webkit-mask-image:linear-gradient(135deg,#fff,transparent 55%);
+          mask-image:linear-gradient(135deg,#fff,transparent 55%);
+}
+.modules__img{
+  position:absolute; inset:0; z-index:1;
+  width:100%; height:100%; object-fit:contain; padding:9%; box-sizing:border-box;
+  /* multiply funde o fundo branco da foto com o branco do painel (idênticos
+     = sem costura visível) e deixa o controle (escuro) por cima normalmente.
+     Bônus: o glow laranja atrás tinge essa área "apagada", criando a luz
+     ambiente ao redor do produto — sem precisar de recorte/alpha na imagem. */
+  mix-blend-mode:multiply;
+  transition:none; will-change:opacity, filter;
+}
+
+.modules__tag{
+  position:absolute; z-index:2;
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.55rem 1rem; border-radius:var(--r-pill);
+  background:rgba(255,255,255,.85); border:1px solid rgba(23,23,23,.08);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  box-shadow:var(--sh-glass);
+  font-family:var(--font-mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--n-900); white-space:nowrap;
+}
+.modules__tag--a{ top:8%; left:-6%; }
+@media (max-width:560px){ .modules__tag{ display:none; } }
+
+/* — Coluna de conteúdo — */
+.modules__copy{ max-width:32rem; }
+.modules__eyebrow{
+  display:flex; align-items:baseline; gap:.5rem;
+  font-family:var(--font-mono); font-size:.75rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--primary-500); font-weight:600; margin:0 0 .9rem;
+}
+.modules__heading{
+  font-family:var(--font-display); font-weight:500;
+  font-size:clamp(1.9rem,3.4vw,2.75rem); line-height:1.06; letter-spacing:-.02em;
+  margin:0 0 1rem;
+}
+.modules__desc{ color:var(--fg-muted); font-size:1rem; line-height:1.7; margin:0 0 1.5rem; max-width:36ch; }
+
+/* card-divider / card-vertical-divider / stat-value / stat-label / icon-circle
+   — reaproveitados 1:1 de assets/design_system.html (Lumen), só com os
+   tokens de cor trocados de Tailwind para as variáveis deste arquivo. */
+.card-divider{
+  height:1px; margin:1.5rem 0;
+  background-image:linear-gradient(90deg, transparent, var(--border) 20%, var(--fg-subtle) 50%, var(--border) 80%, transparent);
+  opacity:.6;
+}
+.card-vertical-divider{
+  width:1px; height:2.75rem;
+  background-image:linear-gradient(180deg, transparent, var(--border) 20%, var(--fg-subtle) 50%, var(--border) 80%, transparent);
+  opacity:.6;
+}
+.stat-value{ font-family:var(--font-display); font-size:1.6rem; font-weight:500; line-height:1.1; color:var(--fg); }
+.stat-label{ font-size:.63rem; color:var(--fg-subtle); text-transform:uppercase; letter-spacing:.08em; margin-top:.2rem; }
+.icon-circle{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:1.5rem; height:1.5rem; border-radius:50%;
+  background:rgba(var(--primary-rgb),.08); border:1px solid rgba(var(--primary-rgb),.2);
+  color:var(--primary-600);
+}
+
+.modules__stats{ display:flex; align-items:center; gap:1.4rem; margin-bottom:1.75rem; }
+.modules__note{
+  margin-left:auto; border:0; background:none; padding:0; color:inherit; cursor:help;
+}
+
+/* Tooltip — reaproveitado 1:1 de design_system.html (.has-tooltip .tooltip-bubble) */
+.has-tooltip{ position:relative; display:inline-flex; }
+.has-tooltip .tooltip-bubble{
+  position:absolute; left:50%; bottom:calc(100% + 10px); z-index:6;
+  transform:translate(-50%,6px) scale(.96);
+  width:15.5rem; max-width:64vw; padding:.75rem .9rem; border-radius:var(--r-md);
+  background:var(--n-950); color:var(--n-50); font-size:.72rem; line-height:1.55;
+  opacity:0; pointer-events:none; transition:all .25s var(--ease-soft);
+  box-shadow:var(--sh-glass);
+}
+.has-tooltip .tooltip-bubble::after{
+  content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:var(--n-950);
+}
+.has-tooltip:hover .tooltip-bubble, .has-tooltip:focus-visible .tooltip-bubble{
+  opacity:1; transform:translate(-50%,0) scale(1); pointer-events:auto;
+}
+
+.modules__cta{ display:flex; flex-wrap:wrap; align-items:center; gap:1.75rem; }
+.modules__link{
+  position:relative; display:inline-flex; align-items:center; gap:.5rem;
+  font-size:.8rem; font-weight:600; color:var(--fg);
+  padding-bottom:2px; border-bottom:1px solid var(--fg);
+}
+.modules__link svg{ width:15px; height:15px; transition:transform var(--d-fast) var(--ease); }
+.modules__link:hover svg{ transform:translateY(2px); }
+
+.modules__nav{ display:flex; align-items:center; justify-content:space-between; gap:1.5rem; flex-wrap:wrap; }
+.modules__arrows{ display:flex; gap:.6rem; }
+.modules__arrow{
+  display:grid; place-items:center; width:2.75rem; height:2.75rem;
+  border:1px solid var(--border); border-radius:var(--r-md);
+  color:var(--fg-muted);
+  transition:color var(--d-fast) var(--ease), border-color var(--d-fast) var(--ease), background-color var(--d-fast) var(--ease);
+}
+.modules__arrow:hover{ color:var(--fg); border-color:var(--fg-subtle); background:var(--bg); }
+.modules__arrow:disabled{ opacity:.35; pointer-events:none; }
+.modules__arrow svg{ width:17px; height:17px; }
+
+.modules__dots{ display:flex; gap:1.15rem; }
+.modules__dot{
+  font-family:var(--font-mono); font-size:.72rem; letter-spacing:.06em;
+  color:var(--fg-subtle); padding-bottom:.35rem; position:relative;
+  transition:color var(--d-fast) var(--ease);
+}
+.modules__dot::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background:var(--fg); transform:scaleX(0); transform-origin:left;
+  transition:transform var(--d-fast) var(--ease);
+}
+.modules__dot:hover{ color:var(--fg); }
+.modules__dot.is-active{ color:var(--fg); font-weight:600; }
+.modules__dot.is-active::after{ transform:scaleX(1); }
 
 /* Utilitário de entrada por scroll — mesmo vocabulário de blur do hero,
-   pronto para qualquer seção futura (basta aplicar a classe). */
+   reaproveitado por qualquer seção (basta aplicar a classe). */
 .reveal-blur{ opacity:0; transform:translateY(28px); filter:blur(14px); }
 
 /* ============================================================================
-   7) PREFERS-REDUCED-MOTION — sem scrub, sem parallax, só fades
+   7) ESPECIFICAÇÕES — terceira dobra, ficha técnica completa
+   Forçada escura de propósito, nos dois temas — não é um esquecimento do
+   toggle claro/escuro: é um interlúdio dramático (a mesma sacada que grandes
+   páginas de produto usam para a seção técnica), conseguido redeclarando os
+   MESMOS nomes de variável usados no resto do arquivo (--bg, --fg, --border…)
+   dentro do escopo de .specs. Como cada componente já lê var(--fg) etc, tudo
+   que reaproveitamos aqui (card-divider, icon-circle, stat-value, beam) já
+   nasce no tom certo, sem precisar de uma versão "escura" de cada classe.
+   ========================================================================== */
+.specs{
+  --bg: var(--n-950); --bg-alt: #111111; --fg: var(--n-50);
+  --fg-muted: var(--n-400); --fg-subtle: var(--n-600);
+  --border: rgba(255,255,255,.12); --grid-line: rgba(255,255,255,.06);
+  --glass-bg: rgba(255,255,255,.06); --glass-brd: rgba(255,255,255,.14);
+  position:relative; overflow:hidden;
+  padding-block:clamp(4.5rem,9vw,7.5rem);
+  background:var(--bg); color:var(--fg);
+}
+.specs__ambient{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+/* Feixe de luz varrendo devagar de cima para baixo — reforça a leitura de
+   "diagnóstico técnico" da seção. Só transform, sem custo de layout. */
+.specs__scanline{
+  position:absolute; left:0; right:0; top:0; height:180px;
+  background:linear-gradient(to bottom, transparent, rgba(var(--primary-rgb),.14), transparent);
+  animation:scan-sweep 9s linear infinite;
+}
+@keyframes scan-sweep{
+  0%  { transform:translateY(-180px); }
+  100%{ transform:translateY(140vh); }
+}
+
+.specs__head{ position:relative; z-index:1; max-width:34rem; margin-bottom:clamp(2.75rem,5.5vw,4.5rem); }
+.specs__kicker{ display:inline-flex; align-items:center; gap:.6rem; color:var(--fg-muted); margin:0 0 1rem; }
+.specs__kicker b{ width:7px; height:7px; border-radius:50%; background:var(--primary-500); animation:pulse-dot 2s cubic-bezier(.4,0,.6,1) infinite; }
+@keyframes pulse-dot{
+  0%  { box-shadow:0 0 0 0 rgba(var(--primary-rgb),.55); }
+  70% { box-shadow:0 0 0 8px rgba(var(--primary-rgb),0); }
+  100%{ box-shadow:0 0 0 0 rgba(var(--primary-rgb),0); }
+}
+.specs__title{
+  font-family:var(--font-display); font-weight:500; text-transform:uppercase;
+  font-size:clamp(2rem,4.4vw,3.25rem); line-height:1.04; letter-spacing:-.02em;
+  margin:0 0 .9rem;
+}
+.specs__lead{ color:var(--fg-muted); font-size:1rem; line-height:1.7; margin:0; max-width:34rem; }
+
+.specs__grid{
+  position:relative; z-index:1;
+  display:grid; grid-template-columns:1fr; gap:1.25rem;
+}
+@media (min-width:640px){ .specs__grid{ grid-template-columns:repeat(2,1fr); } }
+@media (min-width:1100px){ .specs__grid{ grid-template-columns:repeat(3,1fr); gap:1.5rem; } }
+
+.specs__card{
+  position:relative; overflow:hidden;
+  padding:1.75rem; border-radius:var(--r-xl);
+  background:var(--glass-bg); border:1px solid var(--glass-brd);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.specs__card-head{ display:flex; align-items:center; gap:.75rem; margin-bottom:1.1rem; }
+.specs__card-head h3{
+  font-family:var(--font-ui); font-weight:600; font-size:.95rem; letter-spacing:-.01em; margin:0;
+}
+.specs__list{ margin:0; }
+.specs__list > div{
+  display:flex; align-items:baseline; justify-content:space-between; gap:1rem;
+  padding:.6rem 0; border-bottom:1px solid var(--border);
+}
+.specs__list > div:last-child{ border-bottom:0; padding-bottom:0; }
+.specs__list dt{ font-size:.8rem; color:var(--fg-muted); }
+.specs__list dd{ margin:0; font-family:var(--font-mono); font-size:.8rem; font-weight:500; color:var(--fg); text-align:right; }
+
+/* flashlight-card / flashlight-border — reaproveitados 1:1 de
+   design_system.html: --mouse-x/--mouse-y locais ao card, radial-gradient
+   que só aparece no hover, seguindo o cursor. */
+.flashlight-card{ position:relative; }
+.flashlight-card::before{
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  border-radius:inherit;
+  background:radial-gradient(360px circle at var(--mouse-x,50%) var(--mouse-y,50%), rgba(var(--primary-rgb),.16), transparent 60%);
+  opacity:0; transition:opacity .4s var(--ease);
+}
+.flashlight-card:hover::before{ opacity:1; }
+.flashlight-border{
+  position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit; padding:1px;
+  background:radial-gradient(260px circle at var(--mouse-x,50%) var(--mouse-y,50%), rgba(var(--primary-rgb),.65), transparent 60%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0; transition:opacity .4s var(--ease);
+}
+.flashlight-card:hover .flashlight-border{ opacity:1; }
+.specs__card-head, .specs__list{ position:relative; z-index:1; }
+
+.specs__close{
+  position:relative; z-index:1; margin-top:clamp(3rem,6vw,4.5rem);
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  gap:1.5rem; padding-top:clamp(2.5rem,5vw,3.5rem); border-top:1px solid var(--border);
+}
+.specs__close-text{ max-width:28rem; }
+.specs__close-text p{ margin:0; color:var(--fg-muted); font-size:.9rem; line-height:1.6; }
+.specs__close-text strong{ display:block; color:var(--fg); font-family:var(--font-display); font-weight:500; text-transform:uppercase; font-size:clamp(1.4rem,2.6vw,1.9rem); letter-spacing:-.01em; margin-bottom:.4rem; }
+
+/* .btn--primary reage ao atributo GLOBAL data-theme, não ao escopo local de
+   variáveis desta seção — em tema claro (padrão do site) ele renderizaria
+   escuro sobre um fundo que aqui também é escuro (baixo contraste). Em vez
+   de depender disso, o CTA aqui usa o laranja de sinal diretamente —
+   funciona igual não importa o tema do resto da página. */
+.specs .btn--primary{
+  background:linear-gradient(90deg, var(--primary-600), var(--primary-500));
+  color:#fff; box-shadow:var(--sh-glow);
+}
+
+/* ============================================================================
+   8) FECHAMENTO — vídeo de fundo + box com glow (quarta dobra)
+   Inspirado no glow/beam de animations-gemini/index.html: halo desfocado
+   atrás do card + anel cônico girando na borda. O anel reaproveita a MESMA
+   técnica do .beam::before dos botões (pseudo-elemento levemente maior que
+   o conteúdo opaco por cima, então só uma faixa fina do gradiente aparece)
+   — só numa escala maior e mais lenta, para um card grande em vez de um pill.
+   ========================================================================== */
+.finale{
+  position:relative; overflow:hidden;
+  min-height:92svh; display:flex; align-items:center;
+  background:var(--n-950);
+}
+.finale__video-wrap{ position:absolute; inset:0; z-index:0; }
+.finale__video{ width:100%; height:100%; object-fit:cover; object-position:65% 45%; }
+.finale__scrim{
+  position:absolute; inset:0; z-index:1;
+  background:
+    linear-gradient(180deg, rgba(5,5,5,.7), rgba(5,5,5,.4) 45%, rgba(5,5,5,.75)),
+    linear-gradient(100deg, rgba(5,5,5,.55) 0%, transparent 45%, rgba(5,5,5,.35) 100%);
+}
+.finale__inner{ position:relative; z-index:2; display:flex; justify-content:center; width:100%; }
+
+.finale__box{ position:relative; width:100%; max-width:30rem; border-radius:var(--r-xl); }
+/* Anel giratório — mesma técnica robusta corrigida em .beam (ver comentário
+   lá): a versão antiga (inset:-1.5px sem overflow:hidden, arco largo de
+   70°) deixava o degradê "vazar" pra fora do formato do card, aparecendo
+   como aquele retângulo/losango laranja gigante. Correção: um wrapper
+   dedicado só pro anel, com overflow:hidden (nada escapa, ponto final) e
+   padding de 1.5px abrindo o aro fino onde o degradê giratório aparece —
+   o .finale__box-glow (halo desfocado, que PRECISA vazar pra fora do card)
+   fica de fora desse wrapper, então não é afetado pelo clipping. */
+.finale__box-ring{ position:relative; border-radius:inherit; overflow:hidden; padding:1.5px; }
+.finale__box-ring::before{
+  content:""; position:absolute; z-index:0; pointer-events:none;
+  top:50%; left:50%; width:300%; height:300%;
+  transform:translate(-50%,-50%);
+  background:conic-gradient(from 0deg, transparent 0 88%, rgba(var(--primary-rgb),1) 96%, transparent 100%);
+  animation:rotate-beam 5s linear infinite;
+}
+.finale__box-glow{
+  position:absolute; inset:-3.5rem; z-index:-1; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(var(--primary-rgb),.45), transparent 72%);
+  filter:blur(60px);
+  animation:finale-pulse 4.5s ease-in-out infinite;
+}
+@keyframes finale-pulse{
+  0%,100%{ opacity:.5; transform:scale(1); }
+  50%    { opacity:.9; transform:scale(1.1); }
+}
+/* Vidro "líquido" estilo Apple: a receita real por trás do frosted-glass da
+   iOS é blur + saturate no backdrop-filter (satura o que está atrás do
+   painel antes de borrar, o que dá aquele efeito vibrante/translúcido —
+   sem isso é só um blur cinza morto). Em cima disso, uma faixa de luz bem
+   sutil desliza devagar pelo vidro (glass-sheen), simulando refração —
+   a versão em CSS puro do efeito, sem depender de SVG displacement filter
+   (feDisplacementMap), que tem suporte inconsistente entre navegadores e
+   eu não teria como testar visualmente aqui. */
+.finale__box-content{
+  position:relative; z-index:1; overflow:hidden; border-radius:inherit;
+  background:rgba(10,10,10,.55);
+  backdrop-filter:blur(30px) saturate(180%);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid rgba(255,255,255,.1);
+  padding:clamp(2.25rem,5vw,3.25rem);
+}
+.finale__box-content::before{
+  content:""; position:absolute; inset:-45%; z-index:0; pointer-events:none;
+  background:linear-gradient(115deg,
+    transparent 32%, rgba(255,255,255,.07) 47%, rgba(255,255,255,.16) 50%,
+    rgba(255,255,255,.07) 53%, transparent 68%);
+  animation:glass-sheen 10s ease-in-out infinite;
+}
+@keyframes glass-sheen{
+  0%,100%{ transform:translate(-10%,-6%) rotate(0deg); }
+  50%    { transform:translate(10%,6%) rotate(2deg); }
+}
+/* Garante que kicker/stat/copy/cta/trust (filhos diretos) pintem por cima
+   do sheen, sem depender de ordem de pintura em navegadores diferentes. */
+.finale__box-content > *{ position:relative; z-index:1; }
+
+.finale__kicker{
+  display:inline-flex; align-items:center; gap:.6rem;
+  color:rgba(255,255,255,.55); margin:0 0 1.5rem;
+}
+.finale__kicker b{ width:7px; height:7px; border-radius:50%; background:var(--primary-500); animation:pulse-dot 2s cubic-bezier(.4,0,.6,1) infinite; }
+
+.finale__stat-num{
+  display:block; font-family:var(--font-display); font-weight:600;
+  font-size:clamp(4rem,11vw,6.5rem); line-height:.88; letter-spacing:-.03em;
+  color:#fff; text-shadow:0 0 46px rgba(var(--primary-rgb),.65);
+}
+.finale__stat-unit{ font-size:.34em; font-weight:500; margin-left:.15em; color:var(--primary-400); }
+.finale__stat-label{ color:rgba(255,255,255,.8); font-size:.95rem; margin:.6rem 0 1.5rem; }
+
+.finale__copy{ color:rgba(255,255,255,.55); font-size:.9rem; line-height:1.7; margin:0 0 2rem; max-width:30ch; }
+
+.finale__cta{ margin-bottom:1.75rem; }
+.finale__cta .btn--primary{
+  background:linear-gradient(90deg, var(--primary-600), var(--primary-500));
+  color:#fff; box-shadow:var(--sh-glow);
+}
+
+.finale__trust{
+  display:flex; flex-wrap:wrap; align-items:center; gap:.6rem;
+  font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em;
+  color:rgba(255,255,255,.4);
+}
+.finale__trust-dot{ width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.3); }
+
+/* ============================================================================
+   9) RODAPÉ
+   ========================================================================== */
+.site-footer{
+  position:relative; background:var(--bg); border-top:1px solid var(--border);
+  padding:clamp(3rem,6vw,4.5rem) 0 clamp(1.75rem,3vw,2.25rem);
+}
+.site-footer__top{
+  display:flex; flex-wrap:wrap; gap:2.5rem; justify-content:space-between;
+  padding-bottom:clamp(2rem,4vw,3rem); margin-bottom:clamp(1.75rem,3vw,2.25rem);
+  border-bottom:1px solid var(--border);
+}
+.site-footer__brand{ max-width:22rem; }
+.site-footer__brand p{ margin:1rem 0 0; color:var(--fg-muted); font-size:.85rem; line-height:1.6; }
+.site-footer__nav{ display:flex; flex-wrap:wrap; gap:clamp(2rem,5vw,4rem); }
+.site-footer__col h4{
+  font-family:var(--font-mono); font-size:.65rem; font-weight:600; text-transform:uppercase;
+  letter-spacing:.12em; color:var(--fg-subtle); margin:0 0 .9rem;
+}
+.site-footer__col ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.6rem; }
+.site-footer__col a{ position:relative; font-size:.85rem; color:var(--fg-muted); transition:color var(--d-fast) var(--ease); }
+.site-footer__col a:hover{ color:var(--fg); }
+.site-footer__bottom{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem;
+}
+.site-footer__legal{ margin:0; font-size:.75rem; color:var(--fg-subtle); }
+.site-footer__top-link{
+  display:inline-flex; align-items:center; gap:.4rem;
+  font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--fg-muted); transition:color var(--d-fast) var(--ease);
+}
+.site-footer__top-link:hover{ color:var(--fg); }
+.site-footer__top-link svg{ width:13px; height:13px; transition:transform var(--d-fast) var(--ease); }
+.site-footer__top-link:hover svg{ transform:translateY(-2px); }
+
+/* ============================================================================
+   10) PREFERS-REDUCED-MOTION — sem scrub, sem parallax, só fades
    ========================================================================== */
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -672,8 +1151,8 @@ html.js .preloader{
 
     <nav class="site-nav" aria-label="Navegação principal">
       <a href="#hero" data-cursor>Produto</a>
-      <a href="#next" data-cursor>Tecnologia</a>
-      <a href="#hero" data-cursor>Especificações</a>
+      <a href="#tech" data-cursor>Tecnologia</a>
+      <a href="#specs" data-cursor>Especificações</a>
     </nav>
 
     <button class="theme-toggle" id="themeToggle" type="button"
@@ -790,29 +1269,351 @@ html.js .preloader{
 </section>
 
 <!-- =====================================================================
-     PRÓXIMA SEÇÃO — placeholder "Tecnologia"
-     Existe só para dar continuidade visual à saída do vídeo (item pedido:
-     "deixar encaminhada a sequência da próxima página"). Troque o conteúdo
-     de .next-section__content por specs/imagens reais quando estiver pronto;
-     o pano de fundo (grade + aurora) e a animação de entrada (.reveal-blur)
-     já seguem o mesmo vocabulário visual do hero e podem ser reaproveitados
-     em quantas seções vierem depois — basta repetir a marcação.
+     SEGUNDA DOBRA — carrossel de recursos (dados reais em MODULES, no script)
      ===================================================================== -->
-<section class="next-section" id="next" aria-label="Tecnologia — em breve">
-  <div class="next-section__ambient" aria-hidden="true">
+<section class="modules" id="tech" aria-label="Tecnologia do MANBA ONE V2">
+  <div class="modules__ambient" aria-hidden="true">
     <div class="section-grid"></div>
     <div class="aurora aurora--c"></div>
   </div>
-  <div class="next-section__content">
-    <p class="next-section__eyebrow u-mono reveal-blur"><b aria-hidden="true"></b> Tecnologia</p>
-    <h2 class="next-section__title reveal-blur">Por dentro do Manba One V2</h2>
-    <p class="next-section__lead reveal-blur">
-      Esta seção está encaminhada como continuação natural do hero — sticks Hall Effect,
-      chip de rádio proprietário e a engenharia de latência entram aqui.
-    </p>
+
+  <div class="u-container">
+    <div class="modules__head">
+      <p class="modules__kicker u-mono reveal-blur"><b aria-hidden="true"></b> Tecnologia</p>
+      <h2 class="modules__title reveal-blur">Feito para vencer no detalhe.</h2>
+    </div>
+
+    <div class="modules__stage">
+      <!-- Coluna visual -->
+      <div class="modules__visual reveal-blur">
+        <span class="modules__ghost" id="modGhost" aria-hidden="true">01</span>
+        <div class="modules__panel">
+          <div class="modules__glow" aria-hidden="true"></div>
+          <img class="modules__img" id="modImg"
+               src="assets/raw_files/manbaimage.png"
+               alt="Controle MANBA ONE V2 sobre sua base de carregamento, com tela integrada e iluminação RGB">
+        </div>
+        <span class="modules__tag modules__tag--a" id="modTag">Ergonomia estudada</span>
+      </div>
+
+      <!-- Coluna de conteúdo -->
+      <div class="modules__panel-content">
+        <div class="modules__copy reveal-blur" id="modCopy">
+          <p class="modules__eyebrow" id="modEyebrow"><span id="modNum">01</span> · Recurso</p>
+          <h3 class="modules__heading" id="modHeading">Molda-se à sua mão.</h3>
+          <p class="modules__desc" id="modDesc">
+            Curvas estudadas para sessões de horas sem fadiga: cada apoio e cada ângulo
+            desenhados para o seu polegar chegar exatamente onde precisa.
+          </p>
+
+          <div class="modules__stats" id="modStats">
+            <div>
+              <div class="stat-value" id="modStat1Value">3</div>
+              <div class="stat-label" id="modStat1Label">Perfis de grip</div>
+            </div>
+            <div class="card-vertical-divider" aria-hidden="true"></div>
+            <div>
+              <div class="stat-value" id="modStat2Value">145g</div>
+              <div class="stat-label" id="modStat2Label">Peso equilibrado</div>
+            </div>
+            <button class="has-tooltip modules__note" type="button" aria-label="Mais detalhes sobre este recurso">
+              <span class="icon-circle" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                </svg>
+              </span>
+              <span class="tooltip-bubble" id="modNote">Testado em mãos de tamanhos P, M e G antes de fechar a curva final do grip.</span>
+            </button>
+          </div>
+
+          <div class="modules__cta" id="modCta">
+            <span class="beam">
+              <a class="btn btn--primary" href="#specs">
+                Ver especificações
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </span>
+            <!-- Aponta para a seção #specs (ficha técnica completa na página) —
+                 não para manbaimage.png: isso seria uma foto baixando com o
+                 rótulo de "ficha técnica", o que seria enganoso. -->
+            <a class="modules__link" href="#specs" id="modDownload">
+              Ver ficha técnica
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="modules__nav reveal-blur">
+          <div class="modules__arrows">
+            <button class="modules__arrow" id="modPrev" type="button" aria-label="Recurso anterior">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <button class="modules__arrow" id="modNext" type="button" aria-label="Próximo recurso">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modules__dots" id="modDots" role="tablist" aria-label="Recursos do MANBA ONE V2">
+            <button class="modules__dot is-active" type="button" data-index="0" role="tab" aria-selected="true">01</button>
+            <button class="modules__dot" type="button" data-index="1" role="tab" aria-selected="false">02</button>
+            <button class="modules__dot" type="button" data-index="2" role="tab" aria-selected="false">03</button>
+            <button class="modules__dot" type="button" data-index="3" role="tab" aria-selected="false">04</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     TERCEIRA DOBRA — ficha técnica completa (fecha o funil: desejo → recurso
+     → prova técnica). Fundo sempre escuro de propósito (ver comentário no CSS).
+     ===================================================================== -->
+<section class="specs" id="specs" aria-label="Especificações técnicas completas">
+  <div class="specs__ambient" aria-hidden="true">
+    <div class="section-grid"></div>
+    <div class="specs__scanline"></div>
+    <div class="aurora aurora--a" style="top:-10rem; left:-14rem;"></div>
+  </div>
+
+  <div class="u-container">
+    <div class="specs__head">
+      <p class="specs__kicker u-mono reveal-blur"><b aria-hidden="true"></b> Ficha técnica</p>
+      <h2 class="specs__title reveal-blur">Cada número, testado.</h2>
+      <p class="specs__lead reveal-blur">A especificação completa do MANBA ONE V2 — sem letra miúda, sem "até" escondido.</p>
+    </div>
+
+    <div class="specs__grid">
+      <div class="specs__card flashlight-card reveal-blur">
+        <div class="flashlight-border"></div>
+        <div class="specs__card-head">
+          <span class="icon-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/>
+            </svg>
+          </span>
+          <h3>Desempenho</h3>
+        </div>
+        <div class="card-divider"></div>
+        <dl class="specs__list">
+          <div><dt>Latência sem fio</dt><dd>1 ms</dd></div>
+          <div><dt>Taxa de polling</dt><dd>1000 Hz</dd></div>
+          <div><dt>Processador</dt><dd>Dedicado, 32-bit</dd></div>
+        </dl>
+      </div>
+
+      <div class="specs__card flashlight-card reveal-blur">
+        <div class="flashlight-border"></div>
+        <div class="specs__card-head">
+          <span class="icon-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          </span>
+          <h3>Sticks &amp; gatilhos</h3>
+        </div>
+        <div class="card-divider"></div>
+        <dl class="specs__list">
+          <div><dt>Tecnologia</dt><dd>Hall Effect</dd></div>
+          <div><dt>Curso do gatilho</dt><dd>2 níveis</dd></div>
+          <div><dt>Desgaste por atrito</dt><dd>Nenhum</dd></div>
+        </dl>
+      </div>
+
+      <div class="specs__card flashlight-card reveal-blur">
+        <div class="flashlight-border"></div>
+        <div class="specs__card-head">
+          <span class="icon-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+            </svg>
+          </span>
+          <h3>Tela &amp; interface</h3>
+        </div>
+        <div class="card-divider"></div>
+        <dl class="specs__list">
+          <div><dt>Tela</dt><dd>2.4" IPS touch</dd></div>
+          <div><dt>Perfis salvos</dt><dd>Ilimitados*</dd></div>
+          <div><dt>Idiomas</dt><dd>PT-BR · EN</dd></div>
+        </dl>
+      </div>
+
+      <div class="specs__card flashlight-card reveal-blur">
+        <div class="flashlight-border"></div>
+        <div class="specs__card-head">
+          <span class="icon-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4"/>
+            </svg>
+          </span>
+          <h3>Bateria &amp; energia</h3>
+        </div>
+        <div class="card-divider"></div>
+        <dl class="specs__list">
+          <div><dt>Autonomia</dt><dd>Até 30h</dd></div>
+          <div><dt>Conector</dt><dd>USB-C</dd></div>
+          <div><dt>Carregamento</dt><dd>Dock magnético</dd></div>
+        </dl>
+      </div>
+
+      <div class="specs__card flashlight-card reveal-blur">
+        <div class="flashlight-border"></div>
+        <div class="specs__card-head">
+          <span class="icon-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <path d="M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0"/><path d="M12 20h.01"/>
+            </svg>
+          </span>
+          <h3>Conectividade</h3>
+        </div>
+        <div class="card-divider"></div>
+        <dl class="specs__list">
+          <div><dt>Sem fio</dt><dd>2.4GHz proprietário</dd></div>
+          <div><dt>Bluetooth</dt><dd>5.3</dd></div>
+          <div><dt>Cabo</dt><dd>USB-C → USB-A</dd></div>
+        </dl>
+      </div>
+
+      <div class="specs__card flashlight-card reveal-blur">
+        <div class="flashlight-border"></div>
+        <div class="specs__card-head">
+          <span class="icon-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>
+            </svg>
+          </span>
+          <h3>Compatibilidade</h3>
+        </div>
+        <div class="card-divider"></div>
+        <dl class="specs__list">
+          <div><dt>PC</dt><dd>Windows 10 / 11</dd></div>
+          <div><dt>Console</dt><dd>Nintendo Switch</dd></div>
+          <div><dt>Mobile</dt><dd>Android · USB/BT</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="specs__close reveal-blur">
+      <div class="specs__close-text">
+        <strong>Pronto pra sentir a diferença?</strong>
+        <p>*Perfis salvos localmente no controle; sincronização por app entra em uma atualização futura de firmware.</p>
+      </div>
+      <span class="beam">
+        <a class="btn btn--primary" href="#hero">
+          Comprar Agora
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     QUARTA DOBRA — vídeo de fundo (o mesmo arquivo do hero, em loop
+     ambiente e carregado só quando a seção entra na tela — ver JS) +
+     box com glow, fechando o funil no maior número da página: 1ms.
+     ===================================================================== -->
+<section class="finale" id="closing" aria-label="Garanta o seu MANBA ONE V2">
+  <div class="finale__video-wrap" aria-hidden="true">
+    <video class="finale__video" id="finaleVideo" muted playsinline loop preload="none">
+      <source src="assets/raw_files/video_2_scrub.mp4" type="video/mp4">
+      <source src="assets/raw_files/video_2.mp4" type="video/mp4">
+    </video>
+    <div class="finale__scrim"></div>
+  </div>
+
+  <div class="u-container finale__inner">
+    <div class="finale__box reveal-blur">
+      <div class="finale__box-glow" aria-hidden="true"></div>
+      <div class="finale__box-ring">
+        <div class="finale__box-content">
+          <p class="finale__kicker u-mono"><b aria-hidden="true"></b> Por que MANBA</p>
+          <span class="finale__stat-num">1<span class="finale__stat-unit">ms</span></span>
+          <p class="finale__stat-label">De latência real — não "até 1&nbsp;ms". 1&nbsp;ms.</p>
+          <p class="finale__copy">
+            Enquanto um controle comum ainda está processando o seu clique, o MANBA ONE V2
+            já entregou o comando. É essa fração de segundo que separa o tiro certo do respawn.
+          </p>
+          <div class="finale__cta">
+            <span class="beam">
+              <a class="btn btn--primary" href="#hero">
+                Comprar Agora
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </span>
+          </div>
+          <div class="finale__trust">
+            <span>Garantia de 2 anos</span>
+            <span class="finale__trust-dot" aria-hidden="true"></span>
+            <span>Troca em até 30 dias</span>
+            <span class="finale__trust-dot" aria-hidden="true"></span>
+            <span>Frete grátis no Brasil</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 </main>
+
+<footer class="site-footer">
+  <div class="u-container">
+    <div class="site-footer__top">
+      <div class="site-footer__brand reveal-blur">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand__name">Manba</span>
+        </div>
+        <p>Controles pensados no detalhe — precisão, encaixe e latência que você sente antes de entender.</p>
+      </div>
+      <nav class="site-footer__nav reveal-blur" aria-label="Links do rodapé">
+        <div class="site-footer__col">
+          <h4>Produto</h4>
+          <ul>
+            <li><a href="#hero">Visão geral</a></li>
+            <li><a href="#tech">Tecnologia</a></li>
+            <li><a href="#specs">Especificações</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <h4>Compra</h4>
+          <ul>
+            <li><a href="#closing">Garantia &amp; troca</a></li>
+            <li><a href="#hero">Comprar agora</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="site-footer__bottom">
+      <p class="site-footer__legal">© 2026 MANBA. Página de demonstração de design.</p>
+      <a class="site-footer__top-link" href="#hero" id="backToTop">
+        Voltar ao topo
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</footer>
 
 <!-- ===================== LIBS (versões fixadas) ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
@@ -1006,7 +1807,7 @@ html.js .preloader{
       .to('#heroActions', { y: -34,  autoAlpha: 0, filter: 'blur(8px)',  duration: .28, ease: 'power2.in' }, .66)
 
       // --- Saída do vídeo: desliza em diagonal, ganha blur pesado e some —
-      //     a transição para a próxima seção (#next), já encaminhada abaixo.
+      //     a transição para a próxima seção (#tech), já construída abaixo.
       //     Usamos x/y (px via vw/vh) em vez de xPercent/yPercent porque o
       //     parallax de mouse (seção 10) já anima xPercent/yPercent no mesmo
       //     elemento a cada frame; propriedades diferentes = GSAP compõe as
@@ -1019,19 +1820,243 @@ html.js .preloader{
   }
 
   /* ==========================================================================
-     6b) REVELAÇÕES GENÉRICAS (.reveal-blur) — usadas por #next e por
+     6b) REVELAÇÕES GENÉRICAS (.reveal-blur) — usadas por #tech e por
          qualquer seção futura que reaproveitar a mesma classe.
      ======================================================================== */
   function initGenericReveals() {
     if (reduced) { return; }   // sob reduced-motion o CSS já força tudo visível
-    gsap.utils.toArray('.reveal-blur').forEach(function (el, i) {
+    // O atraso do stagger é por GRUPO (mesmo elemento-pai), não um índice
+    // global da página inteira. Com índice global, elementos mais abaixo na
+    // página (como os cards de #specs) acumulavam mais de 1s de atraso —
+    // cada card só começava a animar bem depois de já estar visível e o
+    // usuário ter seguido rolando, parecendo travado/fora de sincronia com
+    // o scroll. Resetando o contador a cada pai, cada grupo volta a
+    // escalonar a partir de 0, exatamente como parece visualmente (uma
+    // fileira/bloco de cada vez).
+    var counters = new Map();
+    gsap.utils.toArray('.reveal-blur').forEach(function (el) {
+      var parent = el.parentElement;
+      var i = counters.has(parent) ? counters.get(parent) : 0;
+      counters.set(parent, i + 1);
       gsap.to(el, {
         opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.1, ease: 'power3.out',
-        delay: i * 0.08,
+        delay: Math.min(i, 5) * 0.08,
         scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' }
       });
     });
   }
+
+  /* ==========================================================================
+     6c) CARROSSEL DE RECURSOS (#tech) — segunda dobra
+     Dados reais do produto; troque textos/tags aqui sem tocar em marcação.
+     A foto (assets/raw_files/manbaimage.png) fica parada entre os recursos —
+     sem zoom nem pan por enquadre; só um pulso leve de blur/opacidade no
+     instante da troca, sincronizado com o texto (ver goTo()).
+     ======================================================================== */
+  var MODULES = [
+    {
+      num: '01', tag: 'Ergonomia estudada',
+      heading: 'Molda-se à sua mão.',
+      desc: 'Curvas estudadas para sessões de horas sem fadiga: cada apoio e cada ângulo desenhados para o seu polegar chegar exatamente onde precisa.',
+      stat1: { v: '3', l: 'Perfis de grip' }, stat2: { v: '145g', l: 'Peso equilibrado' },
+      note: 'Testado em mãos de tamanhos P, M e G antes de fechar a curva final do grip.'
+    },
+    {
+      num: '02', tag: 'Hall Effect · sem drift',
+      heading: 'Hall Effect. Zero drift.',
+      desc: 'Sticks magnéticos que não se desgastam por atrito. Leitura de precisão do primeiro dia ao milionésimo clique — sem drift, sem substituição.',
+      stat1: { v: '0', l: 'Contato físico' }, stat2: { v: '∞', l: 'Vida útil do stick' },
+      note: 'Sensores magnéticos não encostam em nada — sem atrito, não há peça para desgastar.'
+    },
+    {
+      num: '03', tag: 'Tela IPS integrada',
+      heading: 'Uma tela. Controle total.',
+      desc: 'Ajuste sensibilidade, remapeie botões e troque de perfil sem tirar os olhos do jogo — o menu inteiro está literalmente nas suas mãos.',
+      stat1: { v: '2.4"', l: 'Tela IPS' }, stat2: { v: '3', l: 'Perfis salvos' },
+      note: 'Cada perfil guarda sensibilidade, mapeamento de botões e curva dos gatilhos.'
+    },
+    {
+      num: '04', tag: 'Multiplataforma',
+      heading: 'Um controle. Todo lugar.',
+      desc: 'PC, console ou Switch — pareie em segundos e leve seu perfil junto. Trocou de tela, trocou de jogo, o MANBA ONE V2 já está pronto.',
+      stat1: { v: '3', l: 'Plataformas' }, stat2: { v: '<5s', l: 'Pareamento' },
+      note: 'Guarda até 3 dispositivos pareados e alterna entre eles pelo próprio menu da tela.'
+    }
+  ];
+
+  function initModules() {
+    var modIndex = 0;
+    var isAnimating = false;
+
+    var panel      = document.querySelector('.modules__panel');
+    var modImg     = $('modImg');
+    var modGhost   = $('modGhost');
+    var modTag     = $('modTag');
+    var modCopy    = $('modCopy');
+    var modNum     = $('modNum');
+    var modEyebrow = $('modEyebrow');
+    var modHeading = $('modHeading');
+    var modDesc    = $('modDesc');
+    var modStats   = $('modStats');
+    var modCta     = $('modCta');
+    var modNote    = $('modNote');
+    var modStat1V  = $('modStat1Value');
+    var modStat1L  = $('modStat1Label');
+    var modStat2V  = $('modStat2Value');
+    var modStat2L  = $('modStat2Label');
+    var dots       = document.querySelectorAll('.modules__dot');
+
+    // Camadas de texto que entram/saem em stagger (mesmo princípio de
+    // profundidade da saída do hero: elementos diferentes, ritmos diferentes,
+    // em vez de tudo se mover junto como uma placa só).
+    var layers = [modEyebrow, modHeading, modDesc, modStats, modCta];
+
+    // Flashlight do painel — acompanha o cursor via --mouse-x/--mouse-y,
+    // escopado ao próprio painel (mesma técnica do design_system.html).
+    panel.addEventListener('mousemove', function (e) {
+      var r = panel.getBoundingClientRect();
+      panel.style.setProperty('--mouse-x', (e.clientX - r.left) + 'px');
+      panel.style.setProperty('--mouse-y', (e.clientY - r.top) + 'px');
+    });
+
+    function paintDots(i) {
+      dots.forEach(function (d, di) {
+        var active = di === i;
+        d.classList.toggle('is-active', active);
+        d.setAttribute('aria-selected', String(active));
+      });
+    }
+
+    function paintContent(d) {
+      modNum.textContent = d.num;
+      modHeading.textContent = d.heading;
+      modDesc.textContent = d.desc;
+      modGhost.textContent = d.num;
+      modTag.textContent = d.tag;
+      modNote.textContent = d.note;
+      modStat1V.textContent = d.stat1.v; modStat1L.textContent = d.stat1.l;
+      modStat2V.textContent = d.stat2.v; modStat2L.textContent = d.stat2.l;
+    }
+
+    // Para cliques em pontos específicos, escolhe o sentido de giro mais
+    // curto (evita um "05" visualmente inexistente girando o caminho longo).
+    function shortestDir(from, to) {
+      var diff = (to - from + MODULES.length) % MODULES.length;
+      return diff <= MODULES.length / 2 ? 1 : -1;
+    }
+
+    function goTo(newIndex, dir) {
+      newIndex = (newIndex + MODULES.length) % MODULES.length;
+      if (isAnimating || newIndex === modIndex) { return; }
+      isAnimating = true;
+      if (dir === undefined) { dir = shortestDir(modIndex, newIndex); }
+      modIndex = newIndex;
+      var d = MODULES[newIndex];
+
+      // GSAP escreve estilo inline diretamente via rAF — o bloco CSS de
+      // prefers-reduced-motion (que força transition/animation-duration a
+      // quase zero) não tem efeito nisto, já que não é transition nem
+      // @keyframes. Por isso replicamos a checagem aqui: troca instantânea,
+      // sem tween, exatamente como o resto do arquivo já faz.
+      if (reduced) {
+        paintContent(d);
+        paintDots(modIndex);
+        isAnimating = false;
+        return;
+      }
+
+      var OUT_X = dir * -22;  // sai pelo lado de onde veio o clique
+      var IN_X  = dir * 22;   // entra do lado oposto
+
+      // Uma única timeline por chamada — nada mais toca essas propriedades
+      // enquanto isAnimating é true, então não existe a mesma condição de
+      // corrida que o preloader teve (três tweens brigando pelo mesmo alvo).
+      var tl = gsap.timeline({
+        defaults: { ease: 'power2.inOut' },
+        onComplete: function () { isAnimating = false; }
+      });
+
+      layers.forEach(function (el, i) {
+        tl.to(el, { x: OUT_X, autoAlpha: 0, filter: 'blur(9px)', duration: .3 }, i * 0.03);
+      });
+      tl.to(modGhost, { autoAlpha: 0, duration: .25 }, 0)
+        .to(modTag,   { autoAlpha: 0, y: -8, duration: .25 }, 0)
+        // Sem zoom/pan na foto — só um pulso leve de blur+opacidade
+        // marcando a troca, sem mudar o enquadramento da imagem.
+        .to(modImg,   { opacity: .5, filter: 'blur(4px)', duration: .3 }, 0)
+        .to(modImg,   { opacity: 1,  filter: 'blur(0px)', duration: .5 }, .34)
+        .call(function () {
+          paintContent(d);
+          paintDots(modIndex);
+          gsap.set(layers, { x: IN_X });
+        }, null, .34);
+
+      layers.forEach(function (el, i) {
+        tl.to(el, { x: 0, autoAlpha: 1, filter: 'blur(0px)', duration: .5 }, .4 + i * 0.035);
+      });
+      tl.to(modGhost, { autoAlpha: 1, duration: .4 }, .48)
+        .to(modTag,   { autoAlpha: 1, y: 0, duration: .4 }, .52);
+    }
+
+    $('modPrev').addEventListener('click', function () { goTo(modIndex - 1, -1); });
+    $('modNext').addEventListener('click', function () { goTo(modIndex + 1, 1); });
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () { goTo(parseInt(dot.dataset.index, 10)); });
+    });
+  }
+  initModules();
+
+  /* ==========================================================================
+     6d) FLASHLIGHT CARDS (design_system.html) — --mouse-x/--mouse-y locais
+         a cada card, atualizados só enquanto o cursor está sobre ele.
+     ======================================================================== */
+  function initFlashlightCards() {
+    document.querySelectorAll('.flashlight-card').forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--mouse-y', (e.clientY - r.top) + 'px');
+      });
+    });
+  }
+  initFlashlightCards();
+
+  /* ==========================================================================
+     6e) VÍDEO DA QUARTA DOBRA — carregamento preguiçoso
+     preload="none" + só chama play() quando #closing entra na tela: a
+     lição do preloader (seção 8 mais abaixo) foi que carregar vídeo cedo
+     demais em conexões disputadas trava a página. Aqui o vídeo nem começa
+     a baixar enquanto o usuário não rola até perto dele.
+     ======================================================================== */
+  function initFinaleVideo() {
+    var section = $('closing');
+    var video = $('finaleVideo');
+    if (!section || !video || typeof IntersectionObserver === 'undefined') { return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          video.play().catch(function () {}); // autoplay pode ser bloqueado; a seção funciona sem vídeo também
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .15 });
+    io.observe(section);
+  }
+  initFinaleVideo();
+
+  /* ==========================================================================
+     6f) RODAPÉ — "voltar ao topo" com o mesmo scroll suave do resto da página
+     ======================================================================== */
+  function initFooter() {
+    var link = $('backToTop');
+    if (!link) { return; }
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (lenis) { lenis.scrollTo(0, { duration: 1.4 }); }
+      else { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
+  }
+  initFooter();
 
   /* ==========================================================================
      7) ENTRADA — máscaras de linha + blur, no easing do design system
