@@ -1,0 +1,1131 @@
+<!doctype html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Prisma — Design System</title>
+<meta name="description" content="Prisma: sistema de design onde a luz atravessa o vidro — tipografia monumental, glassmorphism refrativo e motion cinético.">
+
+<!-- ============ Tailwind (Play CDN) ============ -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          iris: {
+            50:  '#F5F3FF', 100: '#EDE9FE', 200: '#DDD6FE', 300: '#C4B5FD',
+            400: '#A78BFA', 500: '#8B5CF6', 600: '#7C3AED', 700: '#6D28D9',
+            800: '#5B21B6', 900: '#4C1D95', 950: '#2E1065',
+          },
+        },
+        fontFamily: {
+          display: ['"Bricolage Grotesque"', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['"Space Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          serifAccent: ['"Instrument Serif"', 'serif'],
+        },
+        boxShadow: {
+          glow: '0 0 40px -6px rgba(124,58,237,0.55)',
+          'glow-cyan': '0 0 40px -8px rgba(34,211,238,0.5)',
+          'glow-lg': '0 25px 70px -20px rgba(124,58,237,0.45)',
+        },
+      },
+    },
+  };
+</script>
+
+<!-- ============ Fonts ============ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- ============ Icons (Lucide) ============ -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<style>
+/* ============================================================
+   BASE
+   ============================================================ */
+:root{ --mouse-x:50%; --mouse-y:50%; --rx:0deg; --ry:0deg; }
+html{ scroll-behavior:smooth; }
+body{ -ms-overflow-style:none; }
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:#faf9fc; }
+::-webkit-scrollbar-thumb{ background:#ddd6fe; border-radius:999px; }
+::-webkit-scrollbar-thumb:hover{ background:#c4b5fd; }
+
+.font-display{ font-family:'Bricolage Grotesque', sans-serif; }
+.font-body{ font-family:'Inter', sans-serif; }
+.font-mono{ font-family:'Space Mono', ui-monospace, monospace; }
+.font-space-mono{ font-family:'Space Mono', monospace !important; }
+.font-bricolage{ font-family:'Bricolage Grotesque', sans-serif !important; }
+.font-serif-accent{ font-family:'Instrument Serif', serif; font-style:italic; }
+
+/* ============================================================
+   1) TEXT REVEAL — char split (animation-clean)
+   ============================================================ */
+.char{
+  display:inline-block; opacity:0;
+  transform:translateY(110%);
+  clip-path:polygon(0 0,100% 0,100% 0,0 0);
+  transition:all .7s cubic-bezier(.16,1,.3,1);
+}
+.char.revealed{
+  opacity:1; transform:translateY(0);
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+}
+
+/* ============================================================
+   2) SCROLL REVEAL — animate-on-scroll (animation-clean)
+   ============================================================ */
+.animate-on-scroll{
+  opacity:.01; filter:blur(10px); transform:translateY(24px);
+  transition:all 1s cubic-bezier(.25,.46,.45,.94);
+}
+.animate-on-scroll.in-view{ opacity:1; filter:blur(0); transform:translateY(0); }
+
+.hero-fade-in{ opacity:0; filter:blur(16px); transform:translateY(26px); transition:opacity 1.2s cubic-bezier(.16,1,.3,1), filter 1.2s cubic-bezier(.16,1,.3,1), transform 1.2s cubic-bezier(.16,1,.3,1); }
+.hero-fade-in.in-view{ opacity:1; filter:blur(0); transform:translateY(0); }
+
+/* ============================================================
+   3) SCROLL REVEAL — sys-* system (axion-ai)
+   ============================================================ */
+.sys-reveal{
+  opacity:0; transform:translateY(20px); filter:blur(4px);
+  transition:opacity 1.3s cubic-bezier(.16,1,.3,1), transform 1.3s cubic-bezier(.16,1,.3,1), filter 1.3s ease-out;
+  will-change:opacity,transform;
+}
+.sys-rise{ transform:translateY(34px); }
+.sys-slide-l{ transform:translateX(-34px); }
+.sys-slide-r{ transform:translateX(34px); }
+.sys-scale{ transform:scale(.92); }
+.sys-active{ opacity:1; transform:translate(0) scale(1); filter:blur(0); }
+.sys-delay-100{ transition-delay:120ms; } .sys-delay-200{ transition-delay:240ms; }
+.sys-delay-300{ transition-delay:360ms; } .sys-delay-400{ transition-delay:480ms; }
+.sys-delay-500{ transition-delay:600ms; }
+@keyframes sys-flicker{0%{opacity:.08}6%{opacity:1}12%{opacity:.08}18%{opacity:1}100%{opacity:1}}
+.sys-flicker-anim{ animation:sys-flicker 2.2s linear forwards; opacity:0; }
+.sys-active.sys-flicker-anim{ opacity:1; }
+
+/* ============================================================
+   4) MARQUEE (animation-clean)
+   ============================================================ */
+@keyframes scroll-left{ from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.marquee-content{ animation:scroll-left 32s linear infinite; }
+.marquee-mask{
+  mask-image:linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image:linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+/* ============================================================
+   5) BORDER BEAM BUTTON (animation-clean) — recolorido em conic prisma
+   ============================================================ */
+.btn-beam-container{ position:relative; }
+.beam-border{
+  position:absolute; inset:-1px; border-radius:9999px; pointer-events:none; z-index:0; opacity:0;
+  background:conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(124,58,237,.95) 45deg, rgba(217,70,239,.95) 100deg, rgba(34,211,238,.95) 150deg, transparent 210deg);
+  animation:rotate-beam 2.4s linear infinite; transition:opacity .35s;
+}
+.btn-beam-container:hover .beam-border{ opacity:1; }
+@keyframes rotate-beam{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+/* ============================================================
+   6) FLASHLIGHT / SPOTLIGHT CARD (animation-clean)
+   ============================================================ */
+.flashlight-card{ position:relative; }
+.flashlight-card::before{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background:radial-gradient(700px circle at var(--mouse-x) var(--mouse-y), rgba(124,58,237,.14), transparent 42%);
+  opacity:0; transition:opacity .5s; pointer-events:none; z-index:2;
+}
+.flashlight-card:hover::before{ opacity:1; }
+.flashlight-border{
+  position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background:radial-gradient(520px circle at var(--mouse-x) var(--mouse-y), rgba(124,58,237,.75), transparent 40%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity .5s; pointer-events:none;
+}
+.flashlight-card:hover .flashlight-border{ opacity:1; }
+
+/* ============================================================
+   7) GLASS EFFECT (glass-effect)
+   ============================================================ */
+.glass-effect{ backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.gradient-text{ background-clip:text; -webkit-background-clip:text; color:transparent; }
+.card-divider{ height:1px; background-image:linear-gradient(90deg, transparent, rgba(124,58,237,.28) 20%, rgba(124,58,237,.45) 50%, rgba(124,58,237,.28) 80%, transparent); }
+.card-vertical-divider{ width:1px; background-image:linear-gradient(180deg, transparent, rgba(124,58,237,.28) 20%, rgba(124,58,237,.45) 50%, rgba(124,58,237,.28) 80%, transparent); }
+.stat-value{ font-size:1.5rem; font-weight:700; line-height:1.1; }
+.stat-label{ font-size:.63rem; opacity:.62; text-transform:uppercase; letter-spacing:.09em; }
+.glow{ box-shadow:0 0 26px rgba(124,58,237,.45); }
+.icon-circle{ height:2.25rem; width:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.18); }
+
+/* ============================================================
+   8) PRISM SHEEN — sweep iridescente original (assinatura Prisma)
+   ============================================================ */
+.prism-sheen{ position:relative; isolation:isolate; }
+.prism-sheen::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:1;
+  background:linear-gradient(115deg, transparent 15%, rgba(124,58,237,.22) 38%, rgba(217,70,239,.22) 50%, rgba(34,211,238,.22) 62%, transparent 85%);
+  background-size:250% 250%; mix-blend-mode:soft-light; opacity:.95;
+  animation:prism-shift 8s ease-in-out infinite;
+}
+@keyframes prism-shift{ 0%,100%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } }
+
+/* Borda em gradiente refrativo (estática, distinta do beam giratório) */
+.refract-border{ position:relative; }
+.refract-border::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background:linear-gradient(135deg, rgba(124,58,237,.75), rgba(217,70,239,.55), rgba(34,211,238,.65));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+}
+
+/* Cantos HUD (axion-ai) */
+.hud-corner{ position:absolute; width:14px; height:14px; border-color:rgba(124,58,237,.45); pointer-events:none; }
+.hud-corner.tl{ top:16px; left:16px; border-left:1px solid; border-top:1px solid; }
+.hud-corner.tr{ top:16px; right:16px; border-right:1px solid; border-top:1px solid; }
+.hud-corner.bl{ bottom:16px; left:16px; border-left:1px solid; border-bottom:1px solid; }
+.hud-corner.br{ bottom:16px; right:16px; border-right:1px solid; border-bottom:1px solid; }
+
+/* Painel com tilt 3D acompanhando o cursor */
+.tilt-panel{ transform:perspective(1200px) rotateX(var(--ry)) rotateY(var(--rx)); transition:transform .5s cubic-bezier(.16,1,.3,1); transform-style:preserve-3d; }
+
+/* Fundos: grid sutil + blobs de aurora */
+.bg-grid-light{ background-image:linear-gradient(rgba(124,58,237,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,.07) 1px, transparent 1px); background-size:44px 44px; }
+.aurora-blob{ filter:blur(64px); animation:aurora-drift 13s ease-in-out infinite; }
+@keyframes aurora-drift{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(22px,-20px) scale(1.08);} }
+
+/* Colunas de fundo reveladas por clip-path (animation-clean) */
+.bg-column{ transition:clip-path 1.4s cubic-bezier(.65,0,.35,1); clip-path:inset(100% 0 0 0); }
+.bg-column.active{ clip-path:inset(0 0 0 0); }
+
+/* Formas flutuantes (futureui) */
+@keyframes float1{0%,100%{transform:translateY(0) translateX(0)}50%{transform:translateY(-15px) translateX(5px)}}
+@keyframes float2{0%,100%{transform:translateY(0) translateX(0)}50%{transform:translateY(10px) translateX(-8px)}}
+@keyframes float3{0%,100%{transform:translateY(0) translateX(0)}50%{transform:translateY(-8px) translateX(-5px)}}
+@keyframes spin1{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes spin2{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+
+/* Nav link com underline animado */
+.nav-link{ position:relative; cursor:pointer; }
+.nav-link::after{ content:""; position:absolute; left:0; right:100%; bottom:-6px; height:1px; background:currentColor; transition:right .3s cubic-bezier(.16,1,.3,1); }
+.nav-link:hover::after, .nav-link.active::after{ right:0; }
+.nav-link.active{ color:#171717; }
+
+/* Tooltip */
+.has-tooltip .tooltip-bubble{ opacity:0; pointer-events:none; transform:translate(-50%,4px); transition:all .25s ease; }
+.has-tooltip:hover .tooltip-bubble{ opacity:1; transform:translate(-50%,0); }
+
+/* Modal */
+.modal-overlay{ opacity:0; pointer-events:none; transition:opacity .35s ease; }
+.modal-overlay.open{ opacity:1; pointer-events:auto; }
+.modal-panel{ transform:scale(.92) translateY(12px); opacity:0; transition:all .4s cubic-bezier(.16,1,.3,1); }
+.modal-overlay.open .modal-panel{ transform:scale(1) translateY(0); opacity:1; }
+
+/* Toggle switch */
+.toggle{ width:44px; height:24px; border-radius:999px; position:relative; transition:background .3s; background:#e5e5e5; cursor:pointer; }
+.toggle .knob{ position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:999px; background:white; transition:transform .3s cubic-bezier(.16,1,.3,1); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.toggle.on{ background:#7C3AED; }
+.toggle.on .knob{ transform:translateX(20px); }
+
+/* Status dot com ping (animation-clean) */
+.ping-dot{ position:relative; display:inline-flex; }
+.ping-dot .ping{ position:absolute; inset:0; border-radius:999px; animation:pd-ping 1.6s cubic-bezier(0,0,.2,1) infinite; }
+@keyframes pd-ping{ 75%,100%{ transform:scale(2.2); opacity:0; } }
+</style>
+</head>
+<body class="bg-white text-neutral-900 font-body antialiased selection:bg-iris-500 selection:text-white">
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav id="site-nav" class="fixed top-0 inset-x-0 z-50 glass-effect bg-white/75 border-b border-neutral-200/80">
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-2 group cursor-pointer">
+      <div class="flex gap-1">
+        <div class="w-2 h-6 bg-neutral-950 rounded-full"></div>
+        <div class="w-2 h-6 bg-iris-500 rounded-full group-hover:h-3 transition-all duration-300"></div>
+        <div class="w-2 h-6 bg-neutral-950 rounded-full"></div>
+      </div>
+      <span class="font-display font-semibold uppercase tracking-tight text-sm">Prisma</span>
+    </div>
+    <div class="hidden md:flex items-center gap-8 text-[0.68rem] font-semibold tracking-widest uppercase text-neutral-500">
+      <a data-nav href="#typography" class="nav-link hover:text-neutral-950 transition-colors">Tipografia</a>
+      <a data-nav href="#colors" class="nav-link hover:text-neutral-950 transition-colors">Cores</a>
+      <a data-nav href="#components" class="nav-link hover:text-neutral-950 transition-colors">Componentes</a>
+      <a data-nav href="#icons" class="nav-link hover:text-neutral-950 transition-colors">Ícones</a>
+      <a data-nav href="#motion" class="nav-link hover:text-neutral-950 transition-colors">Motion</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="btn-beam-container hidden md:block relative">
+        <div class="beam-border"></div>
+        <button class="relative glass-effect bg-white/70 border border-neutral-300 rounded-full px-5 py-2 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-white transition-colors">Documentação</button>
+      </div>
+      <button class="md:hidden icon-circle !bg-neutral-950 !border-neutral-950 text-white">
+        <i data-lucide="menu" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     0) HERO
+     ============================================================ -->
+<section id="hero" class="relative pt-36 pb-20 md:pt-44 md:pb-28 overflow-hidden">
+  <!-- decorative backdrop -->
+  <div id="bg-grid" class="absolute inset-0 flex -z-[2] opacity-60"></div>
+  <div class="absolute inset-0 bg-grid-light -z-[2] opacity-40"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-white via-white/70 to-white -z-[1]"></div>
+  <div class="aurora-blob absolute -top-24 -right-10 w-[30rem] h-[30rem] rounded-full bg-iris-300/30 -z-[1] pointer-events-none"></div>
+  <div class="aurora-blob absolute top-1/3 -left-20 w-80 h-80 rounded-full bg-fuchsia-300/20 -z-[1] pointer-events-none" style="animation-delay:-4s"></div>
+  <div class="aurora-blob absolute bottom-0 right-1/4 w-64 h-64 rounded-full bg-cyan-300/25 -z-[1] pointer-events-none" style="animation-delay:-8s"></div>
+
+  <div class="hidden lg:block absolute top-28 left-[6%] w-9 h-9 rounded-full border border-iris-300" style="animation:float1 7s ease-in-out infinite"></div>
+  <div class="hidden lg:block absolute bottom-44 left-[16%] w-5 h-5 rounded-full bg-fuchsia-400/70" style="animation:float2 8s ease-in-out infinite"></div>
+  <div class="hidden lg:block absolute top-56 right-[6%] w-7 h-7 border border-cyan-400/60" style="animation:spin1 12s linear infinite"></div>
+
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10 relative">
+    <!-- Eyebrow -->
+    <div class="animate-on-scroll mb-6 flex items-center gap-3">
+      <span class="ping-dot">
+        <span class="ping w-2 h-2 bg-iris-400"></span>
+        <span class="relative w-2 h-2 rounded-full bg-iris-500"></span>
+      </span>
+      <p class="font-mono text-xs text-neutral-500 tracking-[0.2em] uppercase">Sistema vivo · v1.0.0 · luz em vidro</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <!-- Left: massive lettering -->
+      <div class="lg:col-span-7 relative">
+        <div class="group relative">
+          <!-- Floating labels -->
+          <div class="hidden lg:flex hover:scale-105 transition-transform cursor-default absolute -top-4 left-[8%] z-20 glass-effect bg-white/85 border border-neutral-300 rounded-full px-5 py-2 shadow-sm items-center gap-2">
+            <span class="text-[0.63rem] font-bold uppercase tracking-widest text-neutral-800">Glassmorphism</span>
+          </div>
+          <div class="hidden lg:flex hover:scale-105 transition-transform cursor-default absolute top-[42%] -right-6 z-20 glass-effect bg-white/85 border border-neutral-300 rounded-full px-5 py-2 shadow-sm items-center gap-2">
+            <span class="text-[0.63rem] font-bold uppercase tracking-widest text-neutral-800">Refração 3D</span>
+          </div>
+          <div class="hidden lg:flex z-20 gap-2 hover:scale-105 transition-transform cursor-default text-white bg-neutral-950 rounded-full px-5 py-2 absolute -bottom-5 left-[4%] shadow-lg items-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-iris-400"></span>
+            <span class="text-[0.63rem] font-bold uppercase tracking-widest">Design System</span>
+          </div>
+
+          <h1 id="hero-title" class="font-display font-semibold uppercase leading-[0.82] tracking-tighter text-neutral-950 text-[19vw] sm:text-[15vw] lg:text-[6.6rem] xl:text-[7.8rem] select-none">LUZ</h1>
+          <h1 id="hero-title-2" class="hero-fade-in font-display font-semibold uppercase leading-[0.82] tracking-tighter text-transparent gradient-text bg-gradient-to-r from-iris-600 via-fuchsia-500 to-cyan-400 text-[19vw] sm:text-[15vw] lg:text-[6.6rem] xl:text-[7.8rem] select-none">PRISMA</h1>
+        </div>
+
+        <p class="animate-on-scroll mt-9 max-w-lg text-sm md:text-base text-neutral-600 leading-relaxed">
+          <span class="font-serif-accent text-neutral-800 text-base md:text-lg">Onde a luz vira interface.</span>
+          Prisma decompõe vidro, cor e tipografia monumental em um único sistema — painéis translúcidos com
+          profundidade real, motion refrativo em cada interação e uma paleta que se dispersa como espectro.
+        </p>
+
+        <div class="animate-on-scroll mt-8 flex flex-wrap gap-3">
+          <div class="btn-beam-container relative">
+            <div class="beam-border"></div>
+            <button class="group relative overflow-hidden font-medium text-white bg-gradient-to-r from-iris-600 via-iris-600 to-fuchsia-600 rounded-full px-8 py-3 shadow-glow">
+              <div class="absolute inset-0 bg-white/15 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <span class="relative flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">Explorar sistema <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+            </button>
+          </div>
+          <a href="#components" class="glass-effect bg-white/60 hover:bg-white/90 border border-neutral-300 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-colors">Ver componentes</a>
+        </div>
+      </div>
+
+      <!-- Right: signature glass panel (glass-effect lineage, tilt 3D + prism sheen) -->
+      <div class="lg:col-span-5 relative animate-on-scroll">
+        <div id="tilt-panel" class="tilt-panel prism-sheen refract-border glass-effect bg-gradient-to-br from-white/70 to-white/30 border border-white/70 rounded-[2rem] p-6 md:p-7 relative shadow-glow-lg overflow-hidden">
+          <span class="hud-corner tl"></span><span class="hud-corner tr"></span><span class="hud-corner bl"></span><span class="hud-corner br"></span>
+
+          <div class="relative z-10 flex justify-between items-start mb-5">
+            <div>
+              <p class="text-[0.6rem] font-mono uppercase tracking-[0.2em] text-iris-600 mb-1">// painel de vidro</p>
+              <h2 class="font-display font-semibold text-xl tracking-tight text-neutral-900">PRISMA OS</h2>
+            </div>
+            <span class="text-[0.65rem] font-mono text-neutral-400 text-right">NOVA<br>REV.04</span>
+          </div>
+
+          <div class="relative z-10 flex items-center gap-2">
+            <div class="icon-circle"><i data-lucide="layers" class="w-4 h-4 text-iris-600"></i></div>
+            <div class="card-vertical-divider h-5"></div>
+            <div class="icon-circle"><i data-lucide="sparkles" class="w-4 h-4 text-fuchsia-500"></i></div>
+            <div class="card-vertical-divider h-5"></div>
+            <div class="icon-circle"><i data-lucide="component" class="w-4 h-4 text-cyan-500"></i></div>
+          </div>
+
+          <div class="card-divider w-full my-5 relative z-10"></div>
+
+          <div class="relative z-10 grid grid-cols-3 gap-2 text-center mb-5">
+            <div>
+              <div class="stat-value gradient-text bg-gradient-to-r from-neutral-900 to-neutral-600">98%</div>
+              <div class="stat-label">Cobertura</div>
+            </div>
+            <div class="card-vertical-divider mx-auto"></div>
+            <div>
+              <div class="stat-value gradient-text bg-gradient-to-r from-iris-600 to-fuchsia-500">8</div>
+              <div class="stat-label">Componentes</div>
+            </div>
+            <div class="card-vertical-divider mx-auto"></div>
+            <div>
+              <div class="stat-value gradient-text bg-gradient-to-r from-neutral-900 to-neutral-600">24</div>
+              <div class="stat-label">Tokens</div>
+            </div>
+          </div>
+
+          <div class="card-divider w-full my-1 opacity-70 relative z-10"></div>
+
+          <div class="relative z-10 flex flex-wrap gap-2 mt-4 mb-5">
+            <span class="text-[0.58rem] px-2 py-1 rounded-full bg-iris-500/10 border border-iris-500/25 text-iris-700 font-semibold uppercase tracking-wide">Refração ativa</span>
+            <span class="text-[0.58rem] px-2 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/25 text-fuchsia-700 font-semibold uppercase tracking-wide">Glass 16px</span>
+            <span class="text-[0.58rem] px-2 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-700 font-semibold uppercase tracking-wide">WCAG AA</span>
+            <span class="text-[0.58rem] px-2 py-1 rounded-full bg-neutral-900/5 border border-neutral-300 text-neutral-600 font-semibold uppercase tracking-wide">Tilt 3D</span>
+          </div>
+
+          <div class="relative z-10 flex justify-between text-[0.65rem] text-neutral-500 font-mono">
+            <div class="flex flex-col gap-1">
+              <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-3 h-3"></i> ISO GLASS-01</span>
+              <span class="flex items-center gap-1"><i data-lucide="key" class="w-3 h-3"></i> ID:7F3C2A</span>
+            </div>
+            <div class="flex flex-col gap-1 items-end">
+              <span class="flex items-center gap-1"><i data-lucide="git-branch" class="w-3 h-3"></i> v1.0.0</span>
+              <span class="flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3"></i> prisma.design</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Polaroid-glass image tile -->
+        <div class="hidden md:block absolute -bottom-10 -left-10 w-36 rotate-[-7deg] hover:rotate-0 hover:scale-105 transition-transform duration-500 z-20">
+          <div class="glass-effect bg-white/80 border border-white p-2 pb-3 rounded-xl shadow-2xl">
+            <div class="rounded-lg overflow-hidden aspect-[3/4]">
+              <img src="templates/futureui.aura.build/assets/6e6457af-451b-416a-b0af-1a4eff_f12a0b260530.webp" alt="Referência visual holográfica" class="w-full h-full object-cover" loading="lazy">
+            </div>
+            <p class="mt-2 text-center text-[0.55rem] font-mono uppercase tracking-widest text-neutral-500">REF_004 · holo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature modules -->
+    <div class="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div class="animate-on-scroll flashlight-card group bg-neutral-100/60 hover:bg-neutral-950 hover:text-white border border-neutral-200 hover:border-neutral-950 rounded-2xl p-6 transition-colors duration-300 cursor-pointer">
+        <div class="flashlight-border"></div>
+        <div class="flex justify-between items-start mb-6">
+          <i data-lucide="layers" class="w-5 h-5 text-neutral-600 group-hover:text-white transition-colors"></i>
+          <span class="text-[0.6rem] font-mono opacity-50">01</span>
+        </div>
+        <h3 class="text-xs font-semibold uppercase tracking-widest mb-1">Camada de vidro</h3>
+        <p class="text-[0.7rem] leading-normal opacity-70">Painéis translúcidos com blur real, sheen iridescente e profundidade em 3 planos.</p>
+      </div>
+      <div class="animate-on-scroll flashlight-card group bg-neutral-100/60 hover:bg-neutral-950 hover:text-white border border-neutral-200 hover:border-neutral-950 rounded-2xl p-6 transition-colors duration-300 cursor-pointer" style="transition-delay:80ms">
+        <div class="flashlight-border"></div>
+        <div class="flex justify-between items-start mb-6">
+          <i data-lucide="type" class="w-5 h-5 text-neutral-600 group-hover:text-white transition-colors"></i>
+          <span class="text-[0.6rem] font-mono opacity-50">02</span>
+        </div>
+        <h3 class="text-xs font-semibold uppercase tracking-widest mb-1">Tipografia cinética</h3>
+        <p class="text-[0.7rem] leading-normal opacity-70">Letras monumentais reveladas caractere a caractere, sob demanda e no scroll.</p>
+      </div>
+      <div class="animate-on-scroll flashlight-card group bg-neutral-100/60 hover:bg-neutral-950 hover:text-white border border-neutral-200 hover:border-neutral-950 rounded-2xl p-6 transition-colors duration-300 cursor-pointer" style="transition-delay:160ms">
+        <div class="flashlight-border"></div>
+        <div class="flex justify-between items-start mb-6">
+          <i data-lucide="wand-sparkles" class="w-5 h-5 text-neutral-600 group-hover:text-white transition-colors"></i>
+          <span class="text-[0.6rem] font-mono opacity-50">03</span>
+        </div>
+        <h3 class="text-xs font-semibold uppercase tracking-widest mb-1">Motion refrativo</h3>
+        <p class="text-[0.7rem] leading-normal opacity-70">Beams cônicos, flashlight e tilt 3D compartilham a mesma física visual.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Marquee strip -->
+<div class="marquee-mask border-y border-neutral-200 bg-neutral-50/80 py-4 overflow-hidden relative z-10">
+  <div class="marquee-content flex items-center gap-10 whitespace-nowrap w-max text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
+    <span class="flex items-center gap-10">
+      <span class="flex items-center gap-2"><i data-lucide="gem" class="w-3.5 h-3.5 text-iris-500"></i> Glassmorphism</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="type" class="w-3.5 h-3.5 text-fuchsia-500"></i> Tipografia monumental</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-cyan-500"></i> Motion interativo</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="palette" class="w-3.5 h-3.5 text-iris-500"></i> Espectro violeta → ciano</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="component" class="w-3.5 h-3.5 text-fuchsia-500"></i> Componentes acessíveis</span><span>•</span>
+    </span>
+    <span class="flex items-center gap-10" aria-hidden="true">
+      <span class="flex items-center gap-2"><i data-lucide="gem" class="w-3.5 h-3.5 text-iris-500"></i> Glassmorphism</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="type" class="w-3.5 h-3.5 text-fuchsia-500"></i> Tipografia monumental</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-cyan-500"></i> Motion interativo</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="palette" class="w-3.5 h-3.5 text-iris-500"></i> Espectro violeta → ciano</span><span>•</span>
+      <span class="flex items-center gap-2"><i data-lucide="component" class="w-3.5 h-3.5 text-fuchsia-500"></i> Componentes acessíveis</span><span>•</span>
+    </span>
+  </div>
+</div>
+
+<!-- ============================================================
+     1) TYPOGRAPHY
+     ============================================================ -->
+<section id="typography" class="relative py-24 md:py-32 overflow-hidden">
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10">
+    <div class="sys-reveal sys-rise mb-4 flex items-center gap-3">
+      <span class="text-xs font-mono text-iris-600">01</span>
+      <span class="h-px w-8 bg-neutral-300"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-neutral-500">Fundamentos</span>
+    </div>
+    <h2 class="sys-reveal sys-rise font-display font-semibold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight mb-6">Tipografia</h2>
+    <p class="sys-reveal sys-rise sys-delay-100 text-sm md:text-base text-neutral-600 max-w-2xl mb-14">Bricolage Grotesque para escala monumental, Inter como corpo de leitura, Instrument Serif itálico como acento editorial e Space Mono para dados técnicos.</p>
+
+    <!-- Loading strategy -->
+    <div class="sys-reveal sys-rise sys-delay-100 grid grid-cols-1 md:grid-cols-4 gap-4 mb-16">
+      <div class="glass-effect bg-white/60 border border-neutral-200 rounded-2xl p-5">
+        <p class="font-display font-semibold text-2xl mb-1">Aa</p>
+        <p class="text-xs font-semibold uppercase tracking-widest mb-1">Bricolage Grotesque</p>
+        <p class="text-[0.68rem] text-neutral-500 font-mono">CDN · Google Fonts · variável 200–800 · fallback: sans-serif</p>
+      </div>
+      <div class="glass-effect bg-white/60 border border-neutral-200 rounded-2xl p-5">
+        <p class="font-body text-2xl mb-1">Aa</p>
+        <p class="text-xs font-semibold uppercase tracking-widest mb-1">Inter</p>
+        <p class="text-[0.68rem] text-neutral-500 font-mono">CDN · Google Fonts · 300/400/500/600/700/800 · fallback: sans-serif</p>
+      </div>
+      <div class="glass-effect bg-white/60 border border-neutral-200 rounded-2xl p-5">
+        <p class="font-serif-accent text-2xl mb-1">Aa</p>
+        <p class="text-xs font-semibold uppercase tracking-widest mb-1">Instrument Serif</p>
+        <p class="text-[0.68rem] text-neutral-500 font-mono">CDN · Google Fonts · 400 itálico/regular · fallback: serif</p>
+      </div>
+      <div class="glass-effect bg-white/60 border border-neutral-200 rounded-2xl p-5">
+        <p class="font-mono text-2xl mb-1">Aa</p>
+        <p class="text-xs font-semibold uppercase tracking-widest mb-1">Space Mono</p>
+        <p class="text-[0.68rem] text-neutral-500 font-mono">CDN · Google Fonts · 400/700 · fallback: ui-monospace</p>
+      </div>
+    </div>
+
+    <div class="space-y-0">
+      <!-- H1 -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <h1 class="font-display font-semibold uppercase text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.85] tracking-tighter">Título Um</h1>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Bricolage Grotesque · 700</div>
+          <div>clamp(3.5rem,14vw,7.8rem) / 0.82 · -0.03em · UPPERCASE</div>
+        </div>
+      </div>
+      <!-- H2 -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <h2 class="font-display font-semibold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight">Título Dois</h2>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Bricolage Grotesque · 600</div>
+          <div>2.25rem–3.75rem / 1.05 · -0.02em · normal</div>
+        </div>
+      </div>
+      <!-- H3 -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <h3 class="font-display font-semibold text-2xl md:text-3xl lg:text-4xl tracking-tight leading-tight">Título Três</h3>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Bricolage Grotesque · 600</div>
+          <div>1.875rem / 1.15 · -0.01em · normal</div>
+        </div>
+      </div>
+      <!-- H4 -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <h4 class="font-body font-semibold text-xl tracking-tight">Título Quatro</h4>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 600</div>
+          <div>1.25rem / 1.3 · -0.01em · normal</div>
+        </div>
+      </div>
+      <!-- H5 -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <h5 class="font-body font-semibold text-sm uppercase tracking-[0.08em]">Título Cinco</h5>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 600</div>
+          <div>1rem / 1.4 · 0.08em · UPPERCASE</div>
+        </div>
+      </div>
+      <!-- H6 -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <h6 class="font-mono font-bold text-xs uppercase tracking-[0.15em] text-iris-600">Título Seis · Kicker</h6>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Space Mono · 700</div>
+          <div>0.75rem / 1.4 · 0.15em · UPPERCASE</div>
+        </div>
+      </div>
+      <!-- Body LG -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <p class="font-body text-lg md:text-xl text-neutral-700 leading-relaxed max-w-2xl">Body LG — parágrafos de abertura, subtítulos e destaques editoriais que precisam de mais presença visual.</p>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 400</div>
+          <div>1.125rem / 1.75 · normal</div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <p class="font-body text-base text-neutral-600 leading-relaxed max-w-2xl">Body — texto corrido padrão para conteúdo de leitura extensa, com contraste AA sobre fundo branco.</p>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 400</div>
+          <div>1rem / 1.7 · normal</div>
+        </div>
+      </div>
+      <!-- Body SM -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <p class="font-body text-sm text-neutral-500 leading-relaxed max-w-2xl">Body SM — legendas de card, descrições secundárias e blocos de suporte visual.</p>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 400</div>
+          <div>0.875rem / 1.6 · normal</div>
+        </div>
+      </div>
+      <!-- Caption / Label -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8 border-b border-neutral-200">
+        <p class="font-body font-semibold text-xs uppercase tracking-[0.12em] text-neutral-800">Caption / Label</p>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 600</div>
+          <div>0.75rem / 1.4 · 0.12em · UPPERCASE</div>
+        </div>
+      </div>
+      <!-- Helper -->
+      <div class="sys-reveal flex flex-col md:flex-row md:items-end justify-between gap-4 py-8">
+        <p class="font-body text-xs text-neutral-400">Helper text — mensagens de apoio, dicas de input e estados de erro/sucesso.</p>
+        <div class="text-[0.68rem] font-mono text-neutral-500 whitespace-nowrap md:text-right shrink-0">
+          <div>Inter · 400</div>
+          <div>0.75rem / 1.5 · normal</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     2) COLORS
+     ============================================================ -->
+<section id="colors" class="relative py-24 md:py-32 overflow-hidden bg-neutral-50/70">
+  <div class="aurora-blob absolute top-0 right-0 w-[28rem] h-[28rem] rounded-full bg-iris-300/20 blur-3xl -z-[1]"></div>
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10">
+    <div class="sys-reveal sys-rise mb-4 flex items-center gap-3">
+      <span class="text-xs font-mono text-iris-600">02</span>
+      <span class="h-px w-8 bg-neutral-300"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-neutral-500">Paleta &amp; superfícies</span>
+    </div>
+    <h2 class="sys-reveal sys-rise font-display font-semibold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight mb-6">Sistema de cores</h2>
+    <p class="sys-reveal sys-rise sys-delay-100 text-sm md:text-base text-neutral-600 max-w-2xl mb-14">Neutros para estrutura e texto, espectro violeta→fúcsia→ciano para ação e decoração, feedback semântico para estado — cada token com hex, RGB e HSL.</p>
+
+    <!-- Neutral -->
+    <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Neutros · papel: estrutura / texto</h3>
+    <div class="sys-reveal grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-14">
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-neutral-950 mb-2 border border-neutral-800"></div><div class="text-xs font-mono text-neutral-600">neutral-950</div><div class="text-[0.63rem] font-mono text-neutral-400">#0A0A0A · rgb(10,10,10) · hsl(0,0%,4%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-neutral-800 mb-2 border border-neutral-700"></div><div class="text-xs font-mono text-neutral-600">neutral-800</div><div class="text-[0.63rem] font-mono text-neutral-400">#262626 · rgb(38,38,38) · hsl(0,0%,15%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-neutral-600 mb-2 border border-neutral-500"></div><div class="text-xs font-mono text-neutral-600">neutral-600</div><div class="text-[0.63rem] font-mono text-neutral-400">#525252 · rgb(82,82,82) · hsl(0,0%,32%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-neutral-400 mb-2 border border-neutral-300"></div><div class="text-xs font-mono text-neutral-600">neutral-400</div><div class="text-[0.63rem] font-mono text-neutral-400">#A3A3A3 · rgb(163,163,163) · hsl(0,0%,64%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-neutral-200 mb-2 border border-neutral-300"></div><div class="text-xs font-mono text-neutral-600">neutral-200</div><div class="text-[0.63rem] font-mono text-neutral-400">#E5E5E5 · rgb(229,229,229) · hsl(0,0%,90%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-white mb-2 border border-neutral-200"></div><div class="text-xs font-mono text-neutral-600">white</div><div class="text-[0.63rem] font-mono text-neutral-400">#FFFFFF · rgb(255,255,255) · hsl(0,0%,100%)</div></div>
+    </div>
+
+    <!-- Primary spectrum -->
+    <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Espectro primário · papel: ação / foco / decorativo</h3>
+    <div class="sys-reveal grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-iris-950 mb-2"></div><div class="text-xs font-mono text-neutral-600">iris-950</div><div class="text-[0.63rem] font-mono text-neutral-400">#2E1065 · hsl(261,72%,20%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-iris-700 mb-2"></div><div class="text-xs font-mono text-neutral-600">iris-700</div><div class="text-[0.63rem] font-mono text-neutral-400">#6D28D9 · hsl(263,70%,50%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-iris-600 mb-2 glow"></div><div class="text-xs font-mono text-neutral-600">iris-600 · primária</div><div class="text-[0.63rem] font-mono text-neutral-400">#7C3AED · rgb(124,58,237) · hsl(262,83%,58%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-fuchsia-500 mb-2"></div><div class="text-xs font-mono text-neutral-600">fuchsia-500</div><div class="text-[0.63rem] font-mono text-neutral-400">#D946EF · rgb(217,70,239) · hsl(292,91%,65%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-cyan-400 mb-2"></div><div class="text-xs font-mono text-neutral-600">cyan-400</div><div class="text-[0.63rem] font-mono text-neutral-400">#22D3EE · rgb(34,211,238) · hsl(187,92%,53%)</div></div>
+      <div class="flex flex-col"><div class="h-24 rounded-2xl bg-iris-100 mb-2 border border-neutral-200"></div><div class="text-xs font-mono text-neutral-600">iris-100</div><div class="text-[0.63rem] font-mono text-neutral-400">#EDE9FE · hsl(250,100%,97%)</div></div>
+    </div>
+
+    <!-- opacity variants -->
+    <div class="sys-reveal flex flex-wrap items-center gap-3 mb-14">
+      <span class="text-xs font-mono text-neutral-500 mr-2">variantes de opacidade (iris-600):</span>
+      <div class="w-10 h-10 rounded-full bg-iris-600/10 border border-neutral-200"></div>
+      <div class="w-10 h-10 rounded-full bg-iris-600/25 border border-neutral-200"></div>
+      <div class="w-10 h-10 rounded-full bg-iris-600/50 border border-neutral-200"></div>
+      <div class="w-10 h-10 rounded-full bg-iris-600/75 border border-neutral-200"></div>
+      <div class="w-10 h-10 rounded-full bg-iris-600"></div>
+      <span class="text-[0.63rem] font-mono text-neutral-400">/10 /25 /50 /75 /100</span>
+    </div>
+
+    <!-- Gradients -->
+    <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Gradientes · papel: decorativo / ênfase / sheen</h3>
+    <div class="sys-reveal grid grid-cols-1 md:grid-cols-3 gap-5 mb-14">
+      <div class="h-24 rounded-2xl bg-gradient-to-r from-iris-600 via-fuchsia-500 to-cyan-400"></div>
+      <div class="h-24 rounded-2xl bg-gradient-to-br from-white via-neutral-100 to-iris-100 border border-neutral-200"></div>
+      <div class="h-24 rounded-2xl bg-gradient-to-r from-neutral-900 via-iris-900 to-neutral-950"></div>
+    </div>
+
+    <!-- Feedback -->
+    <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Feedback · papel: estado semântico</h3>
+    <div class="sys-reveal grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">
+      <div class="flex flex-col"><div class="h-20 rounded-2xl bg-emerald-500 mb-2"></div><div class="text-xs font-mono text-neutral-600">success · emerald-500</div><div class="text-[0.63rem] font-mono text-neutral-400">#10B981</div></div>
+      <div class="flex flex-col"><div class="h-20 rounded-2xl bg-amber-500 mb-2"></div><div class="text-xs font-mono text-neutral-600">warning · amber-500</div><div class="text-[0.63rem] font-mono text-neutral-400">#F59E0B</div></div>
+      <div class="flex flex-col"><div class="h-20 rounded-2xl bg-rose-500 mb-2"></div><div class="text-xs font-mono text-neutral-600">error · rose-500</div><div class="text-[0.63rem] font-mono text-neutral-400">#F43F5E</div></div>
+      <div class="flex flex-col"><div class="h-20 rounded-2xl bg-sky-500 mb-2"></div><div class="text-xs font-mono text-neutral-600">info · sky-500</div><div class="text-[0.63rem] font-mono text-neutral-400">#0EA5E9</div></div>
+    </div>
+
+    <!-- Contextual usage -->
+    <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Regras de uso contextual</h3>
+    <div class="sys-reveal overflow-x-auto">
+      <table class="w-full text-left text-xs border-collapse min-w-[640px]">
+        <thead>
+          <tr class="text-neutral-400 uppercase tracking-widest text-[0.63rem]">
+            <th class="py-3 pr-4 font-semibold">Contexto</th>
+            <th class="py-3 pr-4 font-semibold">Token</th>
+            <th class="py-3 pr-4 font-semibold">Uso</th>
+            <th class="py-3 font-semibold">Contraste</th>
+          </tr>
+        </thead>
+        <tbody class="font-mono text-neutral-600">
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Texto sobre branco</td><td class="py-3 pr-4">neutral-950</td><td class="py-3 pr-4">corpo, títulos</td><td class="py-3">AAA</td></tr>
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Texto secundário</td><td class="py-3 pr-4">neutral-500</td><td class="py-3 pr-4">legendas, labels</td><td class="py-3">AA</td></tr>
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Background padrão</td><td class="py-3 pr-4">white / neutral-50</td><td class="py-3 pr-4">página, seções</td><td class="py-3">—</td></tr>
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Borda padrão</td><td class="py-3 pr-4">neutral-200</td><td class="py-3 pr-4">cards, inputs, divisores</td><td class="py-3">—</td></tr>
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Hover (superfície)</td><td class="py-3 pr-4">neutral-950</td><td class="py-3 pr-4">cards invertidos, botões</td><td class="py-3">AAA</td></tr>
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Active / foco</td><td class="py-3 pr-4">iris-600 · ring 4px /15%</td><td class="py-3 pr-4">inputs, botões primários</td><td class="py-3">AA</td></tr>
+          <tr class="border-t border-neutral-200"><td class="py-3 pr-4">Disabled</td><td class="py-3 pr-4">neutral-300 texto · neutral-100 fundo</td><td class="py-3 pr-4">botões, inputs inativos</td><td class="py-3">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     3) UI COMPONENTS
+     ============================================================ -->
+<section id="components" class="relative py-24 md:py-32 overflow-hidden">
+  <div class="absolute inset-0 bg-grid-light opacity-30 -z-[1]"></div>
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10">
+    <div class="sys-reveal sys-rise mb-4 flex items-center gap-3">
+      <span class="text-xs font-mono text-iris-600">03</span>
+      <span class="h-px w-8 bg-neutral-300"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-neutral-500">Elementos de interface</span>
+    </div>
+    <h2 class="sys-reveal sys-rise font-display font-semibold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight mb-16">Componentes</h2>
+
+    <!-- BUTTONS -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Botões</h3>
+      <div class="sys-reveal flex flex-wrap items-center gap-5">
+        <div class="btn-beam-container relative">
+          <div class="beam-border"></div>
+          <button class="group relative overflow-hidden font-medium text-white bg-gradient-to-r from-iris-600 to-fuchsia-600 rounded-full px-8 py-3 shadow-glow">
+            <div class="absolute inset-0 bg-white/15 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            <span class="relative flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">Primário <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+          </button>
+        </div>
+        <button class="glass-effect bg-white/60 hover:bg-white/90 border border-neutral-300 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-colors">Secundário</button>
+        <button class="refract-border relative glass-effect bg-white/70 text-neutral-700 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-widest">Borda refrativa</button>
+        <button class="px-6 py-3 rounded-full border border-neutral-300 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-100 transition-colors">Terciário</button>
+        <button class="px-6 py-3 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold uppercase tracking-widest transition-colors shadow-glow-cyan">Sinal</button>
+        <button disabled class="px-6 py-3 rounded-full bg-neutral-100 text-neutral-300 text-xs font-semibold uppercase tracking-widest cursor-not-allowed">Desabilitado</button>
+        <button class="icon-circle !h-11 !w-11 hover:bg-neutral-950 hover:text-white group transition-colors"><i data-lucide="plus" class="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"></i></button>
+        <div class="flex items-center gap-2">
+          <div id="demo-toggle" class="toggle on"><div class="knob"></div></div>
+          <span class="text-[0.65rem] font-mono text-neutral-500">toggle</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUTS -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Inputs</h3>
+      <div class="sys-reveal grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
+        <div>
+          <label class="block text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-500 mb-2">E-mail</label>
+          <div class="flex items-center gap-2 bg-white border border-neutral-300 rounded-xl px-4 py-3 focus-within:border-iris-500 focus-within:ring-4 focus-within:ring-iris-500/15 transition-shadow">
+            <i data-lucide="mail" class="w-4 h-4 text-neutral-400"></i>
+            <input type="email" placeholder="voce@prisma.design" class="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400">
+          </div>
+          <p class="text-[0.7rem] text-neutral-400 mt-2">Usamos apenas para autenticação.</p>
+        </div>
+        <div>
+          <label class="block text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-500 mb-2">Busca</label>
+          <div class="flex items-center gap-2 glass-effect bg-white/60 border border-neutral-300 rounded-xl px-4 py-3">
+            <i data-lucide="search" class="w-4 h-4 text-neutral-400"></i>
+            <input type="text" placeholder="Buscar componentes…" class="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[0.7rem] font-semibold uppercase tracking-widest text-rose-500 mb-2">Senha — erro</label>
+          <div class="flex items-center gap-2 bg-rose-50 border border-rose-300 rounded-xl px-4 py-3">
+            <i data-lucide="lock" class="w-4 h-4 text-rose-400"></i>
+            <input type="password" value="123" class="w-full bg-transparent text-sm outline-none">
+          </div>
+          <p class="text-[0.7rem] text-rose-500 mt-2">Mínimo de 8 caracteres.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDS -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Cards</h3>
+      <div class="sys-reveal grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Light invert card -->
+        <div class="flashlight-card group bg-neutral-100/70 hover:bg-neutral-950 hover:text-white border border-neutral-200 hover:border-neutral-950 rounded-2xl p-6 transition-colors duration-300 cursor-pointer">
+          <div class="flashlight-border"></div>
+          <div class="flex justify-between items-start mb-6">
+            <i data-lucide="layout-template" class="w-5 h-5 text-neutral-600 group-hover:text-white transition-colors"></i>
+            <span class="text-[0.6rem] font-mono opacity-50">01</span>
+          </div>
+          <h4 class="text-sm font-semibold uppercase tracking-widest mb-1">Card padrão</h4>
+          <p class="text-xs leading-normal opacity-70">Inverte cor no hover com flashlight radial acompanhando o cursor.</p>
+        </div>
+        <!-- Dark image card (axion asset) -->
+        <div class="rounded-2xl overflow-hidden relative h-full min-h-[220px] border border-neutral-800 group">
+          <img src="templates/axion-ai.aura.build/assets/8826ae6a-df85-4863-aa7e-53251a_40c4f9a657d9.jpg" alt="Corredor técnico com feixes de luz" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100">
+          <div class="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/60 to-neutral-950/10"></div>
+          <div class="relative z-10 p-6 flex flex-col justify-end h-full text-white">
+            <i data-lucide="cpu" class="w-5 h-5 mb-3"></i>
+            <h4 class="text-sm font-semibold uppercase tracking-widest mb-1">Card de imagem</h4>
+            <p class="text-xs text-neutral-300">Overlay escuro para superfícies técnicas com foto de referência.</p>
+          </div>
+        </div>
+        <!-- Glass holographic card -->
+        <div class="prism-sheen glass-effect bg-white/50 border border-white/70 rounded-2xl p-6 relative overflow-hidden shadow-glow-lg">
+          <div class="absolute inset-0 rounded-2xl border border-iris-400/40 [mask-image:linear-gradient(135deg,white,transparent_50%)] z-[2]"></div>
+          <div class="relative z-10 flex items-center justify-between mb-4">
+            <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-iris-600">Destaque</p>
+            <span class="icon-circle"><i data-lucide="gem" class="w-4 h-4 text-iris-600"></i></span>
+          </div>
+          <h4 class="relative z-10 text-lg font-semibold tracking-tight mb-1">Card de vidro</h4>
+          <p class="relative z-10 text-xs text-neutral-600">Blur 16px, borda refrativa e sheen iridescente animado.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAVBARS -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Navbars</h3>
+      <div class="sys-reveal glass-effect bg-white/70 border border-neutral-200 rounded-2xl px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="flex gap-1"><div class="w-2 h-5 bg-neutral-950 rounded-full"></div><div class="w-2 h-5 bg-iris-500 rounded-full"></div><div class="w-2 h-5 bg-neutral-950 rounded-full"></div></div>
+          <span class="font-display font-semibold text-sm uppercase tracking-tight">Prisma</span>
+        </div>
+        <div class="hidden md:flex gap-8 text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-500">
+          <span class="nav-link active">Início</span><span class="nav-link">Produto</span><span class="nav-link">Preços</span>
+        </div>
+        <button class="px-4 py-2 rounded-full bg-neutral-950 text-white text-[0.65rem] font-semibold uppercase tracking-widest">Entrar</button>
+      </div>
+    </div>
+
+    <!-- SECTIONS pattern -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Padrões de seção (background)</h3>
+      <div class="sys-reveal grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="relative rounded-2xl overflow-hidden border border-neutral-200 p-8 h-40">
+          <div class="absolute inset-0 bg-grid-light opacity-60"></div>
+          <div class="aurora-blob absolute -top-10 -right-10 w-40 h-40 rounded-full bg-iris-300/40 blur-2xl"></div>
+          <span class="relative text-xs font-mono text-neutral-500">bg-grid-light + aurora-blob</span>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden bg-neutral-950 p-8 h-40 flex items-end">
+          <span class="hud-corner tl" style="border-color:rgba(255,255,255,.25)"></span>
+          <span class="hud-corner br" style="border-color:rgba(255,255,255,.25)"></span>
+          <div class="absolute top-6 right-6 w-16 h-16 rounded-full border border-white/10" style="animation:spin1 10s linear infinite"></div>
+          <span class="relative text-xs font-mono text-neutral-400">bg-neutral-950 · cantos HUD · superfície de contraste</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Modal</h3>
+      <button id="open-modal" class="sys-reveal px-6 py-3 rounded-full border border-neutral-300 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-950 hover:text-white hover:border-neutral-950 transition-colors">Abrir modal</button>
+
+      <div id="modal-overlay" class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950/40 backdrop-blur-sm p-6">
+        <div class="modal-panel prism-sheen glass-effect bg-white/85 border border-white/70 rounded-3xl max-w-md w-full p-8 shadow-2xl relative">
+          <button id="close-modal" class="absolute top-5 right-5 icon-circle hover:bg-neutral-950 hover:text-white transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+          <span class="icon-circle !bg-iris-100 !border-iris-200 mb-4"><i data-lucide="sparkles" class="w-4 h-4 text-iris-600"></i></span>
+          <h4 class="font-display font-semibold text-2xl tracking-tight mb-2">Confirmar ação</h4>
+          <p class="text-sm text-neutral-600 mb-6">Modal de vidro com fade + scale, overlay com blur, sheen iridescente e foco preservado.</p>
+          <div class="flex gap-3">
+            <button id="close-modal-2" class="flex-1 px-5 py-3 rounded-full border border-neutral-300 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-100 transition-colors">Cancelar</button>
+            <button class="flex-1 px-5 py-3 rounded-full bg-gradient-to-r from-iris-600 to-fuchsia-600 text-white text-xs font-semibold uppercase tracking-widest transition-colors">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="mb-20">
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Badges &amp; labels</h3>
+      <div class="sys-reveal flex flex-wrap gap-4 items-center">
+        <span class="bg-white border border-neutral-300 rounded-full px-5 py-2 text-[0.65rem] font-bold uppercase tracking-widest shadow-sm">Neutro</span>
+        <span class="bg-neutral-950 text-white rounded-full px-5 py-2 text-[0.65rem] font-bold uppercase tracking-widest shadow-lg">Escuro</span>
+        <span class="bg-gradient-to-r from-iris-600 to-fuchsia-500 text-white rounded-full px-5 py-2 text-[0.65rem] font-bold uppercase tracking-widest shadow-glow">Espectro</span>
+        <span class="border border-iris-400 text-iris-600 rounded-full px-5 py-2 text-[0.65rem] font-bold uppercase tracking-widest">Outline</span>
+        <span class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full px-4 py-2 text-[0.65rem] font-bold uppercase tracking-widest">
+          <span class="ping-dot"><span class="ping w-1.5 h-1.5 bg-emerald-400"></span><span class="relative w-1.5 h-1.5 rounded-full bg-emerald-500"></span></span> Ativo
+        </span>
+      </div>
+    </div>
+
+    <!-- TOOLTIPS -->
+    <div>
+      <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Tooltips</h3>
+      <div class="sys-reveal flex flex-wrap gap-10">
+        <div class="has-tooltip relative inline-flex">
+          <button class="icon-circle !h-11 !w-11"><i data-lucide="info" class="w-4 h-4"></i></button>
+          <div class="tooltip-bubble absolute -top-11 left-1/2 -translate-x-1/2 bg-neutral-950 text-white text-[0.65rem] font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap">
+            Informação adicional
+            <div class="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-neutral-950 rotate-45 -mt-1"></div>
+          </div>
+        </div>
+        <div class="has-tooltip relative inline-flex">
+          <span class="text-sm font-semibold border-b border-dashed border-neutral-400 cursor-help">termo técnico</span>
+          <div class="tooltip-bubble absolute -top-11 left-1/2 -translate-x-1/2 glass-effect bg-white/90 border border-neutral-200 text-neutral-800 text-[0.65rem] font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg">
+            Definição rápida
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     4) ICONS
+     ============================================================ -->
+<section id="icons" class="relative py-24 md:py-32 overflow-hidden bg-neutral-50/70">
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10">
+    <div class="sys-reveal sys-rise mb-4 flex items-center gap-3">
+      <span class="text-xs font-mono text-iris-600">04</span>
+      <span class="h-px w-8 bg-neutral-300"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-neutral-500">Sistema de ícones</span>
+    </div>
+    <h2 class="sys-reveal sys-rise font-display font-semibold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight mb-14">Ícones</h2>
+
+    <div class="space-y-12">
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Tamanhos</h3>
+        <div class="sys-reveal flex flex-wrap items-center gap-8">
+          <div class="flex flex-col items-center gap-2"><i data-lucide="gem" class="w-4 h-4 text-neutral-950"></i><div class="text-xs font-mono text-neutral-600">w-4 h-4</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="gem" class="w-5 h-5 text-neutral-950"></i><div class="text-xs font-mono text-neutral-600">w-5 h-5</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="gem" class="w-6 h-6 text-neutral-950"></i><div class="text-xs font-mono text-neutral-600">w-6 h-6</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="gem" class="w-8 h-8 text-neutral-950"></i><div class="text-xs font-mono text-neutral-600">w-8 h-8</div></div>
+        </div>
+      </div>
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Cores</h3>
+        <div class="sys-reveal flex flex-wrap items-center gap-8">
+          <div class="flex flex-col items-center gap-2"><i data-lucide="component" class="w-5 h-5 text-neutral-950"></i><div class="text-xs font-mono text-neutral-600">neutral-950</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="component" class="w-5 h-5 text-iris-600"></i><div class="text-xs font-mono text-neutral-600">iris-600</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="component" class="w-5 h-5 text-fuchsia-500"></i><div class="text-xs font-mono text-neutral-600">fuchsia-500</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="component" class="w-5 h-5 text-cyan-500"></i><div class="text-xs font-mono text-neutral-600">cyan-500</div></div>
+          <div class="flex flex-col items-center gap-2"><div class="bg-neutral-950 rounded p-1.5"><i data-lucide="component" class="w-5 h-5 text-white"></i></div><div class="text-xs font-mono text-neutral-600">text-white</div></div>
+        </div>
+      </div>
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Envoltórios (icon-circle)</h3>
+        <div class="sys-reveal flex flex-wrap items-center gap-6">
+          <div class="icon-circle"><i data-lucide="sparkles" class="w-4 h-4 text-iris-600"></i></div>
+          <div class="icon-circle !bg-neutral-950 !border-neutral-950"><i data-lucide="sparkles" class="w-4 h-4 text-white"></i></div>
+          <div class="icon-circle glass-effect !bg-white/60"><i data-lucide="sparkles" class="w-4 h-4 text-neutral-700"></i></div>
+          <div class="icon-circle glow !bg-iris-600 !border-iris-600"><i data-lucide="sparkles" class="w-4 h-4 text-white"></i></div>
+        </div>
+      </div>
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Biblioteca comum (Lucide)</h3>
+        <div class="sys-reveal grid grid-cols-4 md:grid-cols-8 gap-6">
+          <div class="flex flex-col items-center gap-2"><i data-lucide="menu" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">menu</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="layout-template" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">layout</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="component" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">component</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="library" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">library</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="gem" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">gem</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="wand-sparkles" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">wand</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="layers" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">layers</div></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="palette" class="w-5 h-5 text-neutral-950"></i><div class="text-xs text-neutral-600">palette</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     5) MOTION & INTERACTION
+     ============================================================ -->
+<section id="motion" class="relative py-24 md:py-32 overflow-hidden">
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10">
+    <div class="sys-reveal sys-rise mb-4 flex items-center gap-3">
+      <span class="text-xs font-mono text-iris-600">05</span>
+      <span class="h-px w-8 bg-neutral-300"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-neutral-500">Animações e transições</span>
+    </div>
+    <h2 class="sys-reveal sys-rise font-display font-semibold text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight mb-14">Motion</h2>
+
+    <div class="space-y-12">
+      <!-- Hover -->
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Transições de hover</h3>
+        <div class="sys-reveal grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-neutral-100/70 hover:bg-neutral-950 hover:text-white border border-neutral-200 hover:border-neutral-950 rounded-2xl p-5 transition-colors duration-300 cursor-pointer">
+            <div class="text-xs font-semibold uppercase tracking-widest mb-1">Inversão de cor</div>
+            <div class="text-[0.65rem] opacity-70 font-mono">transition-colors duration-300</div>
+          </div>
+          <div class="group bg-neutral-100/70 border border-neutral-200 rounded-2xl p-5 cursor-pointer relative overflow-hidden">
+            <div class="group-hover:translate-y-0 transition-transform duration-300 bg-iris-500/10 absolute inset-0 translate-y-full"></div>
+            <div class="relative text-xs font-semibold uppercase tracking-widest mb-1">Slide overlay</div>
+            <div class="relative text-[0.65rem] opacity-70 font-mono">group-hover:translate-y-0</div>
+          </div>
+          <div class="hover:scale-105 transition-transform cursor-pointer bg-neutral-100/70 border border-neutral-200 rounded-2xl p-5">
+            <div class="text-xs font-semibold uppercase tracking-widest mb-1">Escala no hover</div>
+            <div class="text-[0.65rem] opacity-70 font-mono">hover:scale-105</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reveal systems -->
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Sistemas de revelação (scroll)</h3>
+        <div class="sys-reveal grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-[0.7rem] text-neutral-600">
+          <div class="border border-neutral-200 rounded-2xl p-5"><div class="font-semibold text-neutral-900 mb-1">.char / .char.revealed</div>clip-path + translateY, stagger 30ms por caractere</div>
+          <div class="border border-neutral-200 rounded-2xl p-5"><div class="font-semibold text-neutral-900 mb-1">.animate-on-scroll / .in-view</div>blur(10px)→0, opacity, translateY(24px)→0</div>
+          <div class="border border-neutral-200 rounded-2xl p-5"><div class="font-semibold text-neutral-900 mb-1">.sys-reveal / .sys-active</div>variantes: sys-rise, sys-slide-l/r, sys-scale, sys-delay-100…500</div>
+        </div>
+      </div>
+
+      <!-- Prism sheen + beam + flashlight -->
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Efeitos de assinatura</h3>
+        <div class="sys-reveal grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="prism-sheen glass-effect bg-white/60 border border-neutral-200 rounded-2xl p-5 h-28 flex items-end">
+            <span class="relative z-10 text-[0.65rem] font-mono text-neutral-600">.prism-sheen · sweep 8s</span>
+          </div>
+          <div class="btn-beam-container relative rounded-2xl">
+            <div class="beam-border"></div>
+            <div class="relative glass-effect bg-white/60 border border-neutral-200 rounded-2xl p-5 h-28 flex items-end">
+              <span class="text-[0.65rem] font-mono text-neutral-600">.beam-border · hover</span>
+            </div>
+          </div>
+          <div class="flashlight-card bg-white/60 border border-neutral-200 rounded-2xl p-5 h-28 flex items-end">
+            <div class="flashlight-border"></div>
+            <span class="relative z-10 text-[0.65rem] font-mono text-neutral-600">.flashlight-card · cursor</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animation gallery -->
+      <div>
+        <h3 class="sys-reveal text-xs font-semibold uppercase tracking-widest mb-6 text-neutral-500">Galeria de animação</h3>
+        <div class="hidden lg:block mix-blend-multiply w-full z-50 pointer-events-none relative h-64 bg-neutral-100/40 rounded-2xl p-8 overflow-hidden">
+          <div class="absolute w-12 h-12 rounded-full border border-iris-400" style="top: 10%; left: 20%; animation: float1 6s ease-in-out infinite;"></div>
+          <div class="absolute w-10 h-10 rounded-full bg-fuchsia-400/70" style="top: 60%; left: 70%; animation: float2 8s ease-in-out infinite;"></div>
+          <div class="absolute w-14 h-14 rounded-full border border-cyan-400" style="top: 80%; left: 30%; animation: float3 7s ease-in-out infinite;"></div>
+          <div class="w-10 h-10 border-iris-400 border absolute" style="top: 15%; left: 60%; animation: float2 5s ease-in-out infinite; transform-origin: center"></div>
+          <div class="absolute w-12 h-12 bg-iris-300/60" style="top: 40%; left: 10%; animation: spin1 10s linear infinite;"></div>
+          <div class="absolute w-8 h-8 border border-fuchsia-400" style="top: 70%; left: 80%; animation: float1 9s ease-in-out infinite; transform: rotate(45deg);"></div>
+          <div class="absolute" style="top: 25%; left: 45%; width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid rgba(124,58,237,.5); animation: float3 6s ease-in-out infinite;"></div>
+          <div class="absolute" style="top: 55%; left: 25%; width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 24px solid rgba(217,70,239,.5); animation: float1 8s ease-in-out infinite;"></div>
+          <div class="absolute" style="top: 15%; left: 85%; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 16px solid rgba(34,211,238,.6); animation: spin2 12s linear infinite;"></div>
+          <div class="absolute bottom-4 left-4 text-xs font-mono text-neutral-500">float1, float2, float3, spin1, spin2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="border-t border-neutral-200 bg-neutral-50/80 py-14">
+  <div class="max-w-[100rem] mx-auto px-6 md:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
+    <div class="flex items-center gap-2">
+      <div class="flex gap-1"><div class="w-2 h-5 bg-neutral-950 rounded-full"></div><div class="w-2 h-5 bg-iris-500 rounded-full"></div><div class="w-2 h-5 bg-neutral-950 rounded-full"></div></div>
+      <span class="font-display font-semibold text-sm uppercase tracking-tight">Prisma</span>
+      <span class="text-xs text-neutral-400 font-mono ml-2">© 2026 · sistema de design</span>
+    </div>
+    <div class="flex gap-6 text-xs text-neutral-500 font-mono uppercase tracking-widest">
+      <a class="nav-link hover:text-neutral-950 transition-colors" href="#typography">Tipografia</a>
+      <a class="nav-link hover:text-neutral-950 transition-colors" href="#colors">Cores</a>
+      <a class="nav-link hover:text-neutral-950 transition-colors" href="#components">Componentes</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  lucide.createIcons();
+
+  // --- 1. Char reveal on hero word 1 ---
+  const title = document.getElementById('hero-title');
+  const text = title.textContent;
+  title.innerHTML = '';
+  text.split('').forEach((char, i) => {
+    const span = document.createElement('span');
+    span.textContent = char;
+    span.className = 'char';
+    span.style.transitionDelay = (i * 35) + 'ms';
+    title.appendChild(span);
+  });
+  setTimeout(() => { document.querySelectorAll('.char').forEach(c => c.classList.add('revealed')); }, 150);
+  setTimeout(() => { document.getElementById('hero-title-2').classList.add('in-view'); }, 500);
+
+  // --- 2. Background column reveal (hero) ---
+  const bgGrid = document.getElementById('bg-grid');
+  const colCount = window.innerWidth < 768 ? 6 : 14;
+  for (let i = 0; i < colCount; i++) {
+    const col = document.createElement('div');
+    col.className = 'bg-column h-full w-full border-r border-iris-100 bg-gradient-to-b from-iris-50/0 to-iris-50/60';
+    bgGrid.appendChild(col);
+    setTimeout(() => col.classList.add('active'), 100 + i * 70);
+  }
+
+  // --- 3. Scroll reveal observer ---
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view', 'sys-active');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { root: null, rootMargin: '0px', threshold: 0.1 });
+  document.querySelectorAll('.animate-on-scroll, .sys-reveal').forEach(el => observer.observe(el));
+
+  // --- 4. Flashlight cards ---
+  document.querySelectorAll('.flashlight-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mouse-x', (e.clientX - rect.left) + 'px');
+      card.style.setProperty('--mouse-y', (e.clientY - rect.top) + 'px');
+    });
+  });
+
+  // --- 5. Tilt panel (hero glass panel follows cursor) ---
+  const tiltPanel = document.getElementById('tilt-panel');
+  if (tiltPanel) {
+    const parent = tiltPanel.closest('.lg\\:col-span-5') || tiltPanel.parentElement;
+    parent.addEventListener('mousemove', (e) => {
+      const rect = tiltPanel.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width - 0.5;
+      const py = (e.clientY - rect.top) / rect.height - 0.5;
+      tiltPanel.style.setProperty('--rx', (px * 10) + 'deg');
+      tiltPanel.style.setProperty('--ry', (py * -10) + 'deg');
+    });
+    parent.addEventListener('mouseleave', () => {
+      tiltPanel.style.setProperty('--rx', '0deg');
+      tiltPanel.style.setProperty('--ry', '0deg');
+    });
+  }
+
+  // --- 6. Nav scroll-spy ---
+  const navLinks = document.querySelectorAll('[data-nav]');
+  const sections = Array.from(navLinks).map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = '#' + entry.target.id;
+      const link = document.querySelector('[data-nav][href="' + id + '"]');
+      if (!link) return;
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+  sections.forEach(s => spy.observe(s));
+
+  // --- 7. Modal ---
+  const overlay = document.getElementById('modal-overlay');
+  const openBtn = document.getElementById('open-modal');
+  const closeBtns = [document.getElementById('close-modal'), document.getElementById('close-modal-2')];
+  if (overlay && openBtn) {
+    openBtn.addEventListener('click', () => overlay.classList.add('open'));
+    closeBtns.forEach(btn => btn && btn.addEventListener('click', () => overlay.classList.remove('open')));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') overlay.classList.remove('open'); });
+  }
+
+  // --- 8. Toggle switch ---
+  const toggle = document.getElementById('demo-toggle');
+  if (toggle) toggle.addEventListener('click', () => toggle.classList.toggle('on'));
+})();
+</script>
+</body>
+</html>
